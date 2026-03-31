@@ -1,0 +1,252 @@
+/* ---- Toolbar ---- */
+.toolbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  z-index: 200;
+  position: relative;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow: visible;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: #e0e0e0;
+  margin: 0 6px;
+  flex-shrink: 0;
+}
+
+.toolbar-label {
+  font-size: 11px;
+  color: #888;
+  margin-right: 4px;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ---- Tool buttons ---- */
+.tool-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  color: #555;
+  transition: all 0.15s;
+}
+
+.shortcut-badge {
+  position: absolute;
+  bottom: 1px;
+  right: 2px;
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 1;
+  color: #aaa;
+  pointer-events: none;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.tool-btn.active .shortcut-badge {
+  color: #7aafea;
+}
+
+.tool-btn:hover {
+  background: #f0f0f0;
+}
+
+/* Custom tooltip via data-tooltip attribute */
+.tool-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e1e1e;
+  color: #fff;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease 0.3s;
+  z-index: 1000;
+  font-weight: 400;
+}
+.tool-btn[data-tooltip]:hover::after {
+  opacity: 1;
+}
+
+/* Mini direction buttons for mindmap */
+.tool-btn.mini {
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+.tool-btn.active {
+  background: #e8f0fe;
+  border-color: #4a90d9;
+  color: #1a73e8;
+}
+
+.tool-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.settings-btn {
+  font-size: 18px !important;
+  color: #666 !important;
+}
+
+.settings-btn:hover {
+  color: #333 !important;
+}
+
+.tool-btn-sm {
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+}
+
+.tool-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+}
+
+.tool-icon svg {
+  display: block;
+}
+
+/* ---- Color buttons ---- */
+.color-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s;
+  flex-shrink: 0;
+}
+
+.color-btn:hover {
+  transform: scale(1.2);
+}
+
+.color-btn.active {
+  transform: scale(1.15);
+}
+
+.color-input {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: transparent;
+}
+
+.color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-input::-webkit-color-swatch {
+  border: 1px solid #ccc;
+  border-radius: 50%;
+}
+
+/* ---- Width buttons ---- */
+.width-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.width-btn:hover {
+  background: #f0f0f0;
+}
+
+.width-btn.active {
+  background: #e8f0fe;
+  border-color: #4a90d9;
+}
+
+/* ---- Text tool options ---- */
+.text-options-panel {
+  gap: 4px;
+}
+
+.text-opt-select {
+  height: 30px;
+  padding: 2px 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  background: #fafafa;
+  color: #333;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.text-opt-select:hover,
+.text-opt-select:focus {
+  border-color: #4a90d9;
+}
+
+.text-opt-size {
+  width: 60px;
+}
+

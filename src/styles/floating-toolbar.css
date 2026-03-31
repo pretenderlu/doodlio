@@ -1,0 +1,154 @@
+/* ---- Floating toolbar ---- */
+.floating-toolbar {
+  position: absolute;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
+  user-select: none;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.floating-toolbar-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 32px;
+  cursor: grab;
+  color: #bbb;
+  font-size: 16px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.floating-toolbar-handle:hover {
+  background: #f0f0f0;
+  color: #888;
+}
+
+.floating-toolbar-handle:active {
+  cursor: grabbing;
+}
+
+.ft-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ft-divider {
+  width: 1px;
+  height: 24px;
+  background: #e0e0e0;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.ft-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 15px;
+  color: #555;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.ft-btn:hover {
+  background: #f0f0f0;
+}
+
+.ft-btn.active {
+  background: #e8f0fe;
+  border-color: #4a90d9;
+  color: #1a73e8;
+}
+
+.ft-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.ft-btn-sm {
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+}
+
+.ft-btn-danger:not(:disabled):hover {
+  background: #fff0f0;
+  color: #e03131;
+}
+
+.ft-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+}
+
+.ft-icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.ft-icon-sm {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.ft-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.ft-color:hover {
+  transform: scale(1.2);
+}
+
+.ft-color.active {
+  transform: scale(1.15);
+}
+
+.ft-color-input {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: transparent;
+}
+
+.ft-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.ft-color-input::-webkit-color-swatch {
+  border: 1px solid #ccc;
+  border-radius: 50%;
+}

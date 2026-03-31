@@ -1,0 +1,164 @@
+.layer-panel {
+  position: absolute;
+  right: 8px;
+  top: 60px;
+  bottom: 8px;
+  width: 230px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-size: 12px;
+}
+
+.layer-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.layer-panel-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #333;
+}
+
+.layer-panel-header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.layer-panel-add {
+  background: none;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  font-size: 16px;
+  color: #555;
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.layer-panel-add:hover {
+  background: #e8f0fe;
+  border-color: #4a90d9;
+  color: #1a73e8;
+}
+
+.layer-panel-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #888;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.layer-panel-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.layer-panel-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.layer-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 0.1s;
+}
+.layer-item:hover {
+  background: #f5f5f5;
+}
+.layer-item.selected {
+  background: #e8f0fe;
+  border-left-color: #4a90d9;
+}
+.layer-item.hidden-layer {
+  opacity: 0.45;
+}
+
+.layer-item-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.layer-item-name {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.layer-item-count {
+  font-size: 10px;
+  color: #aaa;
+  flex-shrink: 0;
+}
+
+.layer-rename-input {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #4a90d9;
+  border-radius: 3px;
+  padding: 1px 4px;
+  outline: none;
+  min-width: 0;
+}
+
+.layer-item-actions {
+  display: flex;
+  gap: 1px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.layer-item:hover .layer-item-actions,
+.layer-item.selected .layer-item-actions {
+  opacity: 1;
+}
+
+.layer-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 3px;
+  border-radius: 3px;
+  color: #888;
+  line-height: 1;
+}
+.layer-btn:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+.layer-btn.active {
+  color: #4a90d9;
+}
+.layer-btn-delete {
+  color: #ccc;
+}
+.layer-btn-delete:hover {
+  color: #e03131;
+  background: #fee;
+}

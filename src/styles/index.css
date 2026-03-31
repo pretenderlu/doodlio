@@ -1,0 +1,12 @@
+@import "./reset.css";
+@import "./app.css";
+@import "./toolbar.css";
+@import "./canvas.css";
+@import "./floating-toolbar.css";
+@import "./properties-panel.css";
+@import "./context-menu.css";
+@import "./hamburger-menu.css";
+@import "./recording.css";
+@import "./text-editor.css";
+@import "./slides-panel.css";
+@import "./teleprompter.css";
