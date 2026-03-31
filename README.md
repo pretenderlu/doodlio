@@ -270,7 +270,8 @@ src/
 本项目的设计和实现受到以下优秀项目的启发：
 
 - **[Excalidraw](https://github.com/excalidraw/excalidraw)** — 开源的手绘风格白板工具，本项目的手绘渲染、元素系统等核心理念源自 Excalidraw（MIT License）
-- **[Excalicord](https://www.excalicord.com)** by [Zhang Rui](https://x.com/zarazhangrui) — 白板录屏工具，本项目的录屏合成、Smart Zoom、画中画摄像头等录制功能的灵感来源
+- **[Excalicord](https://www.excalicord.com)** by [Zhang Rui](https://x.com/zarazhangrui) — 白板录屏工具，看到这个项目后激发了我 vibe coding 的欲望，本项目的录屏合成、画中画摄像头等录制功能的灵感来源
+- **[Screen Studio](https://screen.studio/)** — 令人惊艳的 Mac 录屏工具，本项目的 Smart Zoom（鼠标跟踪自动缩放）功能正是源于对 Screen Studio 的痴迷
 
 ## 许可证
 
