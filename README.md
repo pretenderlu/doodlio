@@ -264,3 +264,14 @@ src/
 - **颜色管理**：独立的颜色历史/收藏 hook，描边和填充分离存储，localStorage 持久化
 - **幻灯片管理**：使用同步 ref 镜像避免 React 异步 setState 批处理问题
 - **安全上下文**：媒体设备 API 在非 HTTPS 环境下优雅降级
+
+## 致谢
+
+本项目的设计和实现受到以下优秀项目的启发：
+
+- **[Excalidraw](https://github.com/excalidraw/excalidraw)** — 开源的手绘风格白板工具，本项目的手绘渲染、元素系统等核心理念源自 Excalidraw（MIT License）
+- **[Excalicord](https://www.excalicord.com)** by [Zhang Rui](https://x.com/zarazhangrui) — 白板录屏工具，本项目的录屏合成、Smart Zoom、画中画摄像头等录制功能的灵感来源
+
+## 许可证
+
+[MIT License](./LICENSE)
