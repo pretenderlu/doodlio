@@ -146,6 +146,10 @@ function WhiteboardApp() {
   const [showCaptureMenu, setShowCaptureMenu] = useState(false);
   const captureMenuRef = useRef<HTMLDivElement>(null);
 
+  // Mobile "more" menu for right toolbar
+  const [showMobileMore, setShowMobileMore] = useState(false);
+  const mobileMoreRef = useRef<HTMLDivElement>(null);
+
   // Close capture menu on outside click
   useEffect(() => {
     if (!showCaptureMenu) return;
@@ -157,6 +161,18 @@ function WhiteboardApp() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showCaptureMenu]);
+
+  // Close mobile more menu on outside click
+  useEffect(() => {
+    if (!showMobileMore) return;
+    const handler = (e: MouseEvent) => {
+      if (mobileMoreRef.current && !mobileMoreRef.current.contains(e.target as Node)) {
+        setShowMobileMore(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showMobileMore]);
 
   // ---- Markdown panels ----
   const [mdPanels, setMdPanels] = useState<MarkdownPanelItem[]>([]);
@@ -496,134 +512,207 @@ function WhiteboardApp() {
           <Toolbar onContextMenu={handleToolbarContext} />
         </div>
         <div className="toolbar-right">
-          <button
-            className={`tool-btn ${showLayerPanel ? 'active' : ''}`}
-            onClick={() => setShowLayerPanel(!showLayerPanel)}
-            data-tooltip="图层"
-          >
-            {renderToolIcon("layers", "tool-icon")}
-          </button>
-          <button
-            className={`tool-btn ${showSlidesPanel ? 'active' : ''}`}
-            onClick={() => setShowSlidesPanel(!showSlidesPanel)}
-            data-tooltip="幻灯片"
-          >
-            {renderToolIcon("slides", "tool-icon")}
-          </button>
-          <button
-            className={`tool-btn ${mdPanels.length > 0 ? 'active' : ''}`}
-            onClick={handleOpenMarkdown}
-            title="打开 Markdown / 脑图文件"
-          >
-            {renderToolIcon("markdown", "tool-icon")}
-            {mdPanels.length > 0 && (
-              <span style={{
-                position: 'absolute', top: 2, right: 2,
-                width: 14, height: 14, borderRadius: '50%',
-                background: '#6c63ff', color: '#fff',
-                fontSize: 9, fontWeight: 700, lineHeight: '14px',
-                textAlign: 'center', pointerEvents: 'none',
-              }}>{mdPanels.length}</span>
-            )}
-          </button>
-          <button
-            className={`tool-btn ${showTeleprompter ? 'active' : ''}`}
-            onClick={() => setShowTeleprompter(!showTeleprompter)}
-            title="提词器"
-          >
-            {renderToolIcon("teleprompter", "tool-icon")}
-          </button>
-          {/* Capture sources button + popup menu */}
-          <div style={{ position: "relative" }} ref={captureMenuRef}>
+          {/* Desktop: show all buttons inline */}
+          <div className="toolbar-right-desktop">
             <button
-              className={`tool-btn ${capture.sources.length > 0 ? 'active' : ''}`}
-              onClick={() => setShowCaptureMenu(!showCaptureMenu)}
-              title="采集源"
+              className={`tool-btn ${showLayerPanel ? 'active' : ''}`}
+              onClick={() => setShowLayerPanel(!showLayerPanel)}
+              data-tooltip="图层"
             >
-              {renderToolIcon("capture", "tool-icon")}
-              {capture.sources.length > 0 && (
+              {renderToolIcon("layers", "tool-icon")}
+            </button>
+            <button
+              className={`tool-btn ${showSlidesPanel ? 'active' : ''}`}
+              onClick={() => setShowSlidesPanel(!showSlidesPanel)}
+              data-tooltip="幻灯片"
+            >
+              {renderToolIcon("slides", "tool-icon")}
+            </button>
+            <button
+              className={`tool-btn ${mdPanels.length > 0 ? 'active' : ''}`}
+              onClick={handleOpenMarkdown}
+              title="打开 Markdown / 脑图文件"
+            >
+              {renderToolIcon("markdown", "tool-icon")}
+              {mdPanels.length > 0 && (
                 <span style={{
                   position: 'absolute', top: 2, right: 2,
                   width: 14, height: 14, borderRadius: '50%',
-                  background: '#e03131', color: '#fff',
-                  fontSize: 9, fontWeight: 700,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  lineHeight: 1,
-                }}>{capture.sources.length}</span>
+                  background: '#6c63ff', color: '#fff',
+                  fontSize: 9, fontWeight: 700, lineHeight: '14px',
+                  textAlign: 'center', pointerEvents: 'none',
+                }}>{mdPanels.length}</span>
               )}
             </button>
-            {showCaptureMenu && (
-              <div className="capture-popup-menu" style={{
-                position: 'absolute', top: '100%', right: 0, marginTop: 6,
-                background: '#fff', borderRadius: 10,
-                boxShadow: '0 4px 24px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1)',
-                minWidth: 220, padding: '6px 0',
-                zIndex: 9999, fontSize: 13,
-              }}>
-                <div style={{ padding: '6px 14px', fontWeight: 600, fontSize: 12, color: '#888', letterSpacing: 0.5 }}>添加采集</div>
-                <button
-                  className="capture-menu-item"
-                  disabled={capture.isFull}
-                  onClick={() => { capture.addScreenCapture(); setShowCaptureMenu(false); }}
-                  style={captureMenuItemStyle}
-                >
-                  <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="16" height="11" rx="2" /><line x1="7" y1="17" x2="13" y2="17" /><line x1="10" y1="14" x2="10" y2="17" /></svg> 屏幕 / 窗口 / 标签页
-                </button>
-                {captureDeviceList.length > 0 && (
-                  <>
-                    <div style={{ padding: '6px 14px 2px', fontWeight: 600, fontSize: 12, color: '#888', letterSpacing: 0.5, marginTop: 4 }}>设备采集</div>
-                    {captureDeviceList.map((d) => (
-                      <button
-                        key={d.deviceId}
-                        className="capture-menu-item"
-                        disabled={capture.isFull}
-                        onClick={() => { capture.addDeviceCapture(d.deviceId, d.label); setShowCaptureMenu(false); }}
-                        style={captureMenuItemStyle}
-                      >
-                        <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="12" height="10" rx="1.5" /><path d="M14 9l4-2v6l-4-2z" /></svg> {d.label}
-                      </button>
-                    ))}
-                  </>
-                )}
+            <button
+              className={`tool-btn ${showTeleprompter ? 'active' : ''}`}
+              onClick={() => setShowTeleprompter(!showTeleprompter)}
+              title="提词器"
+            >
+              {renderToolIcon("teleprompter", "tool-icon")}
+            </button>
+            {/* Capture sources button + popup menu */}
+            <div style={{ position: "relative" }} ref={captureMenuRef}>
+              <button
+                className={`tool-btn ${capture.sources.length > 0 ? 'active' : ''}`}
+                onClick={() => setShowCaptureMenu(!showCaptureMenu)}
+                title="采集源"
+              >
+                {renderToolIcon("capture", "tool-icon")}
                 {capture.sources.length > 0 && (
-                  <>
-                    <div style={{ height: 1, background: '#eee', margin: '6px 10px' }} />
-                    <div style={{ padding: '4px 14px', fontWeight: 600, fontSize: 12, color: '#888', letterSpacing: 0.5 }}>当前采集 ({capture.sources.length}/4)</div>
-                    {capture.sources.map((s) => (
-                      <button
-                        key={s.id}
-                        className="capture-menu-item"
-                        onClick={() => { capture.removeCapture(s.id); }}
-                        style={captureMenuItemStyle}
-                      >
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4cd964', display: 'inline-block' }} />
-                        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.label}</span>
-                        <span style={{ color: '#e03131', fontSize: 11, flexShrink: 0 }}>✕ 关闭</span>
-                      </button>
-                    ))}
-                  </>
+                  <span style={{
+                    position: 'absolute', top: 2, right: 2,
+                    width: 14, height: 14, borderRadius: '50%',
+                    background: '#e03131', color: '#fff',
+                    fontSize: 9, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    lineHeight: 1,
+                  }}>{capture.sources.length}</span>
                 )}
-                {capture.isFull && (
-                  <div style={{ padding: '4px 14px', fontSize: 11, color: '#e03131' }}>已达最大数量 (4)</div>
-                )}
+              </button>
+              {showCaptureMenu && (
+                <div className="capture-popup-menu" style={{
+                  position: 'absolute', top: '100%', right: 0, marginTop: 6,
+                  background: '#fff', borderRadius: 10,
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1)',
+                  minWidth: 220, padding: '6px 0',
+                  zIndex: 9999, fontSize: 13,
+                }}>
+                  <div style={{ padding: '6px 14px', fontWeight: 600, fontSize: 12, color: '#888', letterSpacing: 0.5 }}>添加采集</div>
+                  <button
+                    className="capture-menu-item"
+                    disabled={capture.isFull}
+                    onClick={() => { capture.addScreenCapture(); setShowCaptureMenu(false); }}
+                    style={captureMenuItemStyle}
+                  >
+                    <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="16" height="11" rx="2" /><line x1="7" y1="17" x2="13" y2="17" /><line x1="10" y1="14" x2="10" y2="17" /></svg> 屏幕 / 窗口 / 标签页
+                  </button>
+                  {captureDeviceList.length > 0 && (
+                    <>
+                      <div style={{ padding: '6px 14px 2px', fontWeight: 600, fontSize: 12, color: '#888', letterSpacing: 0.5, marginTop: 4 }}>设备采集</div>
+                      {captureDeviceList.map((d) => (
+                        <button
+                          key={d.deviceId}
+                          className="capture-menu-item"
+                          disabled={capture.isFull}
+                          onClick={() => { capture.addDeviceCapture(d.deviceId, d.label); setShowCaptureMenu(false); }}
+                          style={captureMenuItemStyle}
+                        >
+                          <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="12" height="10" rx="1.5" /><path d="M14 9l4-2v6l-4-2z" /></svg> {d.label}
+                        </button>
+                      ))}
+                    </>
+                  )}
+                  {capture.sources.length > 0 && (
+                    <>
+                      <div style={{ height: 1, background: '#eee', margin: '6px 10px' }} />
+                      <div style={{ padding: '4px 14px', fontWeight: 600, fontSize: 12, color: '#888', letterSpacing: 0.5 }}>当前采集 ({capture.sources.length}/4)</div>
+                      {capture.sources.map((s) => (
+                        <button
+                          key={s.id}
+                          className="capture-menu-item"
+                          onClick={() => { capture.removeCapture(s.id); }}
+                          style={captureMenuItemStyle}
+                        >
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4cd964', display: 'inline-block' }} />
+                          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.label}</span>
+                          <span style={{ color: '#e03131', fontSize: 11, flexShrink: 0 }}>✕ 关闭</span>
+                        </button>
+                      ))}
+                    </>
+                  )}
+                  {capture.isFull && (
+                    <div style={{ padding: '4px 14px', fontSize: 11, color: '#e03131' }}>已达最大数量 (4)</div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="toolbar-divider" />
+            <button
+              className="tool-btn settings-btn"
+              onClick={() => setShowSetupModal(true)}
+              title="录制设置"
+            >
+              {renderToolIcon("settings", "tool-icon")}
+            </button>
+            <div className="toolbar-divider" />
+            <RecordingControls
+              isRecording={isRecording}
+              duration={duration}
+              onStart={handleStartRecording}
+              onStop={stopRecording}
+            />
+          </div>
+
+          {/* Mobile: "more" button with dropdown */}
+          <div className="toolbar-mobile-more" ref={mobileMoreRef}>
+            <button
+              className="tool-btn"
+              onClick={() => setShowMobileMore(!showMobileMore)}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <circle cx="4" cy="10" r="2" />
+                <circle cx="10" cy="10" r="2" />
+                <circle cx="16" cy="10" r="2" />
+              </svg>
+            </button>
+            {showMobileMore && (
+              <div className="mobile-more-menu">
+                <button
+                  className={`mobile-more-item ${showLayerPanel ? 'active' : ''}`}
+                  onClick={() => { setShowLayerPanel(!showLayerPanel); setShowMobileMore(false); }}
+                >
+                  {renderToolIcon("layers", "tool-icon")}
+                  <span>图层</span>
+                </button>
+                <button
+                  className={`mobile-more-item ${showSlidesPanel ? 'active' : ''}`}
+                  onClick={() => { setShowSlidesPanel(!showSlidesPanel); setShowMobileMore(false); }}
+                >
+                  {renderToolIcon("slides", "tool-icon")}
+                  <span>幻灯片</span>
+                </button>
+                <button
+                  className={`mobile-more-item ${mdPanels.length > 0 ? 'active' : ''}`}
+                  onClick={() => { handleOpenMarkdown(); setShowMobileMore(false); }}
+                >
+                  {renderToolIcon("markdown", "tool-icon")}
+                  <span>Markdown</span>
+                </button>
+                <button
+                  className={`mobile-more-item ${showTeleprompter ? 'active' : ''}`}
+                  onClick={() => { setShowTeleprompter(!showTeleprompter); setShowMobileMore(false); }}
+                >
+                  {renderToolIcon("teleprompter", "tool-icon")}
+                  <span>提词器</span>
+                </button>
+                <button
+                  className="mobile-more-item"
+                  onClick={() => { capture.addScreenCapture(); setShowMobileMore(false); }}
+                >
+                  {renderToolIcon("capture", "tool-icon")}
+                  <span>采集源</span>
+                </button>
+                <div style={{ height: 1, background: '#eee', margin: '4px 10px' }} />
+                <button
+                  className="mobile-more-item"
+                  onClick={() => { setShowSetupModal(true); setShowMobileMore(false); }}
+                >
+                  {renderToolIcon("settings", "tool-icon")}
+                  <span>录制设置</span>
+                </button>
+                <button
+                  className={`mobile-more-item ${isRecording ? 'active' : ''}`}
+                  onClick={() => { isRecording ? stopRecording() : handleStartRecording(); setShowMobileMore(false); }}
+                >
+                  <span className="tool-icon" style={{ color: isRecording ? '#e03131' : undefined }}>
+                    {isRecording ? '⏹' : '⏺'}
+                  </span>
+                  <span>{isRecording ? '停止录制' : '开始录制'}</span>
+                </button>
               </div>
             )}
           </div>
-          <div className="toolbar-divider" />
-          <button
-            className="tool-btn settings-btn"
-            onClick={() => setShowSetupModal(true)}
-            title="录制设置"
-          >
-            {renderToolIcon("settings", "tool-icon")}
-          </button>
-          <div className="toolbar-divider" />
-          <RecordingControls
-            isRecording={isRecording}
-            duration={duration}
-            onStart={handleStartRecording}
-            onStop={stopRecording}
-          />
         </div>
       </div>
 
