@@ -23,7 +23,7 @@ const initialState: WhiteboardState = {
   selectedElementIds: [],
   eraserMode: "stroke",
   eraserSize: 20,
-  laserDuration: 1500,
+  laserDuration: 300,
   viewport: { ...DEFAULT_VIEWPORT },
   undoStack: [],
   redoStack: [],

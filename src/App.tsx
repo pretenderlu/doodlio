@@ -567,7 +567,7 @@ function WhiteboardApp() {
                   onClick={() => { capture.addScreenCapture(); setShowCaptureMenu(false); }}
                   style={captureMenuItemStyle}
                 >
-                  <span>🖥</span> 屏幕 / 窗口 / 标签页
+                  <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="16" height="11" rx="2" /><line x1="7" y1="17" x2="13" y2="17" /><line x1="10" y1="14" x2="10" y2="17" /></svg> 屏幕 / 窗口 / 标签页
                 </button>
                 {captureDeviceList.length > 0 && (
                   <>
@@ -580,7 +580,7 @@ function WhiteboardApp() {
                         onClick={() => { capture.addDeviceCapture(d.deviceId, d.label); setShowCaptureMenu(false); }}
                         style={captureMenuItemStyle}
                       >
-                        <span>📹</span> {d.label}
+                        <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="12" height="10" rx="1.5" /><path d="M14 9l4-2v6l-4-2z" /></svg> {d.label}
                       </button>
                     ))}
                   </>

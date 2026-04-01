@@ -490,21 +490,39 @@ export function useRecording() {
             compCtx.roundRect(cdx, cdy, cdw, cdh, capRadius);
             compCtx.clip();
 
+            // Read crop data
+            const cropX = parseFloat(captureEl.dataset.cropX ?? "0");
+            const cropY = parseFloat(captureEl.dataset.cropY ?? "0");
+            const cropW = parseFloat(captureEl.dataset.cropW ?? "1");
+            const cropH = parseFloat(captureEl.dataset.cropH ?? "1");
+
+            // Compute objectFit:cover source rect against the BASE 16:9 aspect,
+            // not the post-crop container — matching how the CSS display works.
             const cvw = captureVideo.videoWidth;
             const cvh = captureVideo.videoHeight;
             const capVideoAspect = cvw / cvh;
-            const capTargetAspect = cdw / cdh;
+            const baseTargetAspect = 16 / 9;
             let csx: number, csy: number, csw: number, csh: number;
-            if (capVideoAspect > capTargetAspect) {
+            if (capVideoAspect > baseTargetAspect) {
               csh = cvh;
-              csw = cvh * capTargetAspect;
+              csw = cvh * baseTargetAspect;
               csx = (cvw - csw) / 2;
               csy = 0;
             } else {
               csw = cvw;
-              csh = cvw / capTargetAspect;
+              csh = cvw / baseTargetAspect;
               csx = 0;
               csy = (cvh - csh) / 2;
+            }
+
+            // Apply crop on top of the base cover rect
+            if (cropW < 1 || cropH < 1 || cropX > 0 || cropY > 0) {
+              const fullSw = csw;
+              const fullSh = csh;
+              csx += fullSw * cropX;
+              csy += fullSh * cropY;
+              csw = fullSw * cropW;
+              csh = fullSh * cropH;
             }
 
             compCtx.drawImage(captureVideo, csx, csy, csw, csh, cdx, cdy, cdw, cdh);
