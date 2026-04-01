@@ -8,7 +8,7 @@
   width: 240px;
   max-height: calc(100vh - 52px - 48px);
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-radius: 14px;

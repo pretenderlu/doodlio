@@ -159,7 +159,7 @@ function WhiteboardApp() {
   useEffect(() => {
     const container = toolbarContainerRef.current;
     if (!container) return;
-    const activeBtn = container.querySelector('.tool-btn.active') as HTMLElement;
+    const activeBtn = container.querySelector('.tool-btn.active:not(.mini)') as HTMLElement;
     if (!activeBtn) return;
     const containerRect = container.getBoundingClientRect();
     const btnRect = activeBtn.getBoundingClientRect();
