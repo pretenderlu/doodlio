@@ -150,16 +150,20 @@ function WhiteboardApp() {
   const [showMobileMore, setShowMobileMore] = useState(false);
   const mobileMoreRef = useRef<HTMLDivElement>(null);
 
-  // Close capture menu on outside click
+  // Close capture menu on outside click/touch
   useEffect(() => {
     if (!showCaptureMenu) return;
-    const handler = (e: MouseEvent) => {
+    const handler = (e: MouseEvent | TouchEvent) => {
       if (captureMenuRef.current && !captureMenuRef.current.contains(e.target as Node)) {
         setShowCaptureMenu(false);
       }
     };
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
   }, [showCaptureMenu]);
 
   // Close mobile more menu on outside click/touch

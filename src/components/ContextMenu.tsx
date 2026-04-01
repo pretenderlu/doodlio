@@ -17,7 +17,7 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
+    const handleClick = (e: MouseEvent | TouchEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         onClose();
       }
@@ -26,9 +26,11 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("mousedown", handleClick);
+    window.addEventListener("touchstart", handleClick);
     window.addEventListener("keydown", handleKey);
     return () => {
       window.removeEventListener("mousedown", handleClick);
+      window.removeEventListener("touchstart", handleClick);
       window.removeEventListener("keydown", handleKey);
     };
   }, [onClose]);
