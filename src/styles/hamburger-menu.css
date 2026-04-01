@@ -196,10 +196,3 @@
   text-align: center;
 }
 
-@media (max-width: 768px) {
-  .hamburger-menu {
-    position: fixed;
-    top: 52px;
-    left: 6px;
-  }
-}

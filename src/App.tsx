@@ -511,15 +511,15 @@ function WhiteboardApp() {
   return (
     <div className="app">
       <div className="toolbar-container">
+        <HamburgerMenu
+          canvasBg={canvasBg}
+          onCanvasBgChange={setCanvasBg}
+          onOpenFile={handleOpenFile}
+          onSaveFile={handleSaveFile}
+          onExportImage={handleExportImage}
+          onExportSvg={handleExportSvg}
+        />
         <div className="toolbar-left" onPointerDown={() => setPropsPanelCollapsed(false)}>
-          <HamburgerMenu
-            canvasBg={canvasBg}
-            onCanvasBgChange={setCanvasBg}
-            onOpenFile={handleOpenFile}
-            onSaveFile={handleSaveFile}
-            onExportImage={handleExportImage}
-            onExportSvg={handleExportSvg}
-          />
           <Toolbar onContextMenu={handleToolbarContext} />
         </div>
         <div className="toolbar-right">
