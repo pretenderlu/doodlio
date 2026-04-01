@@ -151,6 +151,8 @@ export interface RecordingSettings {
   audioDeviceId: string;
   cursorHighlight: boolean;
   cursorHighlightColor: string;
+  cursorMagnify: boolean;
+  cursorMagnifySize: number;     // scale factor, e.g. 1.5 = 150%
   resolution: string; // e.g. "1920x1080"
   frameRate: FrameRate;
   videoBitrate: number; // bps
@@ -176,6 +178,8 @@ export const DEFAULT_SETTINGS: RecordingSettings = {
   audioDeviceId: "",
   cursorHighlight: false,
   cursorHighlightColor: "#e03131",
+  cursorMagnify: false,
+  cursorMagnifySize: 1.5,
   resolution: "1920x1080",
   frameRate: 30,
   videoBitrate: 8_000_000,
@@ -382,6 +386,10 @@ interface Props {
   onCursorHighlightChange: (v: boolean) => void;
   cursorHighlightColor: string;
   onCursorHighlightColorChange: (c: string) => void;
+  cursorMagnify: boolean;
+  onCursorMagnifyChange: (v: boolean) => void;
+  cursorMagnifySize: number;
+  onCursorMagnifySizeChange: (v: number) => void;
   smartZoom: boolean;
   onSmartZoomChange: (v: boolean) => void;
   smartZoomLevel: number;
@@ -403,6 +411,78 @@ interface Props {
   onConfirm: () => void;
   onCancel: () => void;
 }
+
+type SettingsTab = "display" | "background" | "devices" | "effects";
+
+// ---- SVG tab icons (20x20, 1.5px stroke, matching project style) ----
+const TAB_ICON_PROPS: React.SVGAttributes<SVGElement> = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.5,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
+
+function TabIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <svg width={16} height={16} viewBox="0 0 20 20" {...TAB_ICON_PROPS}>
+      {children}
+    </svg>
+  );
+}
+
+const SETTINGS_TABS: { id: SettingsTab; label: string; icon: () => React.ReactNode }[] = [
+  {
+    id: "display", label: "画面",
+    icon: () => (
+      <TabIcon>
+        {/* Film / clapperboard */}
+        <rect x="2" y="4" width="16" height="12" rx="2" />
+        <line x1="2" y1="8" x2="18" y2="8" />
+        <line x1="6" y1="4" x2="6" y2="8" />
+        <line x1="10" y1="4" x2="10" y2="8" />
+        <line x1="14" y1="4" x2="14" y2="8" />
+      </TabIcon>
+    ),
+  },
+  {
+    id: "background", label: "背景",
+    icon: () => (
+      <TabIcon>
+        {/* Palette */}
+        <circle cx="10" cy="10" r="8" />
+        <circle cx="7" cy="8" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="11" cy="6" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="14" cy="9" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="7" cy="12" r="1.5" fill="currentColor" stroke="none" />
+      </TabIcon>
+    ),
+  },
+  {
+    id: "devices", label: "设备",
+    icon: () => (
+      <TabIcon>
+        {/* Camera */}
+        <rect x="2" y="6" width="12" height="9" rx="1.5" />
+        <path d="M14 9l4-2v7l-4-2z" />
+      </TabIcon>
+    ),
+  },
+  {
+    id: "effects", label: "效果",
+    icon: () => (
+      <TabIcon>
+        {/* Magic wand / sparkle */}
+        <line x1="4" y1="16" x2="12" y2="4" />
+        <path d="M12 4l2-1.5L15.5 4 14 6z" fill="currentColor" />
+        <line x1="15" y1="10" x2="15" y2="14" />
+        <line x1="13" y1="12" x2="17" y2="12" />
+        <line x1="17" y1="2" x2="17" y2="5" />
+        <line x1="15.5" y1="3.5" x2="18.5" y2="3.5" />
+      </TabIcon>
+    ),
+  },
+];
 
 export function RecordingSetupModal({
   isWebcamOn,
@@ -436,6 +516,10 @@ export function RecordingSetupModal({
   onCursorHighlightChange,
   cursorHighlightColor,
   onCursorHighlightColorChange,
+  cursorMagnify,
+  onCursorMagnifyChange,
+  cursorMagnifySize,
+  onCursorMagnifySizeChange,
   smartZoom,
   onSmartZoomChange,
   smartZoomLevel,
@@ -457,6 +541,7 @@ export function RecordingSetupModal({
   onConfirm,
   onCancel,
 }: Props) {
+  const [activeTab, setActiveTab] = useState<SettingsTab>("display");
   const [bgCategory, setBgCategory] = useState<BgCategory>("all");
   const customColorRef = useRef<HTMLInputElement>(null);
   const { videoDevices, audioDevices } = useMediaDevices();
@@ -504,420 +589,490 @@ export function RecordingSetupModal({
             <button className="rsetup-close" onClick={onCancel}>✕</button>
           </div>
 
+          {/* ── Tab bar ── */}
+          <div className="rsetup-tabs">
+            {SETTINGS_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                className={`rsetup-tab ${activeTab === tab.id ? "active" : ""}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <span className="rsetup-tab-icon">{tab.icon()}</span>
+                <span className="rsetup-tab-label">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+
           <div className="rsetup-body">
 
-            {/* Aspect ratio */}
-            <div className="rsetup-section">
-              <div className="rsetup-section-label">画面比例</div>
-              <div className="rsetup-aspect-grid">
-                {ASPECT_PRESETS.map((preset) => (
-                  <button
-                    key={preset.value}
-                    className={`rsetup-aspect-card ${aspectRatio === preset.value ? "active" : ""}`}
-                    onClick={() => onAspectRatioChange(preset.value)}
-                  >
-                    <span className="rsetup-aspect-ratio">{preset.label}</span>
-                    <span className="rsetup-aspect-sub">{preset.sub}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Video quality: resolution + framerate + bitrate */}
-            <div className="rsetup-section">
-              <div className="rsetup-section-label">视频质量</div>
-
-              {/* Resolution */}
-              <div className="rsetup-sub-label">分辨率</div>
-              <div className="rsetup-aspect-grid rsetup-res-grid">
-                {RESOLUTION_PRESETS.map((preset) => {
-                  const key = `${preset.width}x${preset.height}`;
-                  return (
-                    <button
-                      key={key}
-                      className={`rsetup-aspect-card ${resolution === key ? "active" : ""}`}
-                      onClick={() => onResolutionChange(key)}
-                    >
-                      <span className="rsetup-aspect-ratio">{preset.label}</span>
-                      <span className="rsetup-aspect-sub">{preset.sub}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Frame rate */}
-              <div className="rsetup-sub-label" style={{ marginTop: 14 }}>帧率</div>
-              <div className="rsetup-shape-btns rsetup-shape-btns-3">
-                {FRAME_RATE_PRESETS.map((fps) => (
-                  <button
-                    key={fps}
-                    className={`rsetup-shape-btn ${frameRate === fps ? "active" : ""}`}
-                    onClick={() => onFrameRateChange(fps)}
-                  >
-                    {fps} fps
-                  </button>
-                ))}
-              </div>
-
-              {/* Bitrate / quality */}
-              <div className="rsetup-sub-label" style={{ marginTop: 14 }}>
-                画质：<span className="rsetup-value">{currentBitrateLabel}</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={BITRATE_LEVELS.length - 1}
-                step={1}
-                value={bitrateIndex >= 0 ? bitrateIndex : 2}
-                onChange={(e) => onVideoBitrateChange(BITRATE_LEVELS[Number(e.target.value)].value)}
-                className="rsetup-slider"
-              />
-              <div className="rsetup-range-labels">
-                {BITRATE_LEVELS.map((b) => (
-                  <span key={b.value}>{b.label}</span>
-                ))}
-              </div>
-            </div>
-
-            {/* Background */}
-            <div className="rsetup-section">
-              <div className="rsetup-section-label">背景</div>
-              <div className="rsetup-bg-tabs">
-                {BG_CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.id}
-                    className={`rsetup-bg-tab ${bgCategory === cat.id ? "active" : ""}`}
-                    onClick={() => setBgCategory(cat.id)}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-              <button className="rsetup-random-btn" onClick={randomBg}>
-                ✨ 随机选择壁纸
-              </button>
-              <div className="rsetup-bg-grid">
-                {filteredPresets.map((preset) => (
-                  <button
-                    key={preset.id}
-                    className={`rsetup-bg-swatch ${bgMatch(preset.bg, background) ? "active" : ""}`}
-                    style={{ background: preset.css }}
-                    onClick={() => onBackgroundChange(preset.bg)}
-                  />
-                ))}
-                <button
-                  className={`rsetup-bg-swatch rsetup-bg-custom ${isCustom ? "active" : ""}`}
-                  onClick={() => customColorRef.current?.click()}
-                  title="自定义颜色"
-                />
-                <input
-                  ref={customColorRef}
-                  type="color"
-                  value={customColor}
-                  onChange={(e) =>
-                    onBackgroundChange({ type: "solid", color: e.target.value })
-                  }
-                  style={{ position: "absolute", opacity: 0, pointerEvents: "none", width: 0, height: 0 }}
-                />
-              </div>
-            </div>
-
-            {/* Canvas border radius */}
-            <div className="rsetup-section">
-              <div className="rsetup-section-label">
-                圆角半径：<span className="rsetup-value">{canvasBorderRadius}PX</span>
-              </div>
-              <input
-                type="range" min={0} max={50} value={canvasBorderRadius}
-                onChange={(e) => onCanvasBorderRadiusChange(Number(e.target.value))}
-                className="rsetup-slider"
-              />
-              <div className="rsetup-range-labels"><span>直角</span><span>圆角</span></div>
-            </div>
-
-            {/* Canvas padding */}
-            <div className="rsetup-section">
-              <div className="rsetup-section-label">
-                画布边距：<span className="rsetup-value">{canvasPadding}PX</span>
-              </div>
-              <input
-                type="range" min={0} max={120} value={canvasPadding}
-                onChange={(e) => onCanvasPaddingChange(Number(e.target.value))}
-                className="rsetup-slider"
-              />
-              <div className="rsetup-range-labels"><span>无</span><span>大</span></div>
-            </div>
-
-            {/* Webcam */}
-            <div className="rsetup-section">
-              <div className="rsetup-section-label">摄像头</div>
-              <div className="rsetup-toggle-row">
-                <span className="rsetup-toggle-label">录制时显示摄像头画面</span>
-                <label className="toggle-switch">
-                  <input type="checkbox" checked={isWebcamOn} onChange={() => onToggleWebcam()} />
-                  <span className="toggle-slider" />
-                </label>
-              </div>
-
-              {isWebcamOn && (
-                <>
-                  <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                    大小：<span className="rsetup-value">{webcamSize}px</span>
-                  </div>
-                  <input
-                    type="range" min={80} max={400} value={webcamSize}
-                    onChange={(e) => onWebcamSizeChange(Number(e.target.value))}
-                    className="rsetup-slider"
-                  />
-                  <div className="rsetup-range-labels"><span>小</span><span>大</span></div>
-
-                  <div className="rsetup-section-label" style={{ marginTop: 14 }}>形状</div>
-                  <div className="rsetup-shape-btns rsetup-shape-btns-4">
-                    <button
-                      className={`rsetup-shape-btn ${webcamShape === "rectangle" ? "active" : ""}`}
-                      onClick={() => onWebcamShapeChange("rectangle")}
-                    >
-                      ▬ 长方形
-                    </button>
-                    <button
-                      className={`rsetup-shape-btn ${webcamShape === "square" ? "active" : ""}`}
-                      onClick={() => onWebcamShapeChange("square")}
-                    >
-                      □ 正方形
-                    </button>
-                    <button
-                      className={`rsetup-shape-btn ${webcamShape === "circle" ? "active" : ""}`}
-                      onClick={() => onWebcamShapeChange("circle")}
-                    >
-                      ○ 圆形
-                    </button>
-                    <button
-                      className={`rsetup-shape-btn ${webcamShape === "squircle" ? "active" : ""}`}
-                      onClick={() => onWebcamShapeChange("squircle")}
-                    >
-                      ◼ 超椭圆
-                    </button>
-                  </div>
-
-                  {/* Corner radius slider for non-circle and non-squircle shapes */}
-                  {webcamShape !== "circle" && webcamShape !== "squircle" && (
-                    <>
-                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                        边框圆角：<span className="rsetup-value">{webcamCornerRadius}%</span>
-                      </div>
-                      <input
-                        type="range" min={0} max={50} value={webcamCornerRadius}
-                        onChange={(e) => onWebcamCornerRadiusChange(Number(e.target.value))}
-                        className="rsetup-slider"
-                      />
-                      <div className="rsetup-range-labels"><span>直角</span><span>圆角</span></div>
-                    </>
-                  )}
-
-                  {/* Camera device selector */}
-                  {videoDevices.length > 0 && (
-                    <>
-                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>摄像头设备</div>
-                      <select
-                        className="rsetup-device-select"
-                        value={videoDeviceId}
-                        onChange={(e) => onVideoDeviceChange(e.target.value)}
-                      >
-                        <option value="">默认</option>
-                        {videoDevices.map((d) => (
-                          <option key={d.deviceId} value={d.deviceId}>{d.label}</option>
-                        ))}
-                      </select>
-                    </>
-                  )}
-
-                  {/* Microphone selector */}
-                  {audioDevices.length > 0 && (
-                    <>
-                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>麦克风设备</div>
-                      <select
-                        className="rsetup-device-select"
-                        value={audioDeviceId}
-                        onChange={(e) => onAudioDeviceChange(e.target.value)}
-                      >
-                        <option value="">默认</option>
-                        {audioDevices.map((d) => (
-                          <option key={d.deviceId} value={d.deviceId}>{d.label}</option>
-                        ))}
-                      </select>
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Capture source */}
-            <div className="rsetup-section">
-              <div className="rsetup-section-label">采集源</div>
-
-              {/* Quick-add buttons */}
-              <div className="rsetup-shape-btns" style={{ marginBottom: 10 }}>
-                <button
-                  className="rsetup-shape-btn"
-                  disabled={captureIsFull}
-                  onClick={() => onAddScreenCapture()}
-                >
-                  🖥 屏幕采集
-                </button>
-                <button
-                  className="rsetup-shape-btn"
-                  disabled={captureIsFull || videoDevices.length === 0}
-                  onClick={() => {
-                    if (videoDevices.length > 0) onAddDeviceCapture(videoDevices[0].deviceId, videoDevices[0].label);
-                  }}
-                >
-                  📹 设备采集
-                </button>
-              </div>
-
-              {/* Active sources list */}
-              {captureSources.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {captureSources.map((src) => (
-                    <div key={src.id} style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '6px 10px', background: '#f5f5f5',
-                      borderRadius: 8, fontSize: 12,
-                    }}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4cd964', flexShrink: 0 }} />
-                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {src.type === 'screen' ? '🖥' : '📹'} {src.label}
-                      </span>
-                      <button
-                        onClick={() => onRemoveCapture(src.id)}
-                        style={{
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          color: '#e03131', fontSize: 11, fontWeight: 600,
-                          padding: '2px 6px', borderRadius: 4,
-                        }}
-                      >✕ 关闭</button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ fontSize: 12, color: '#aaa', padding: '6px 0' }}>
-                  暂无活跃采集源。点击上方按钮添加，或使用工具栏㌀采集㌁按钮。
-                </div>
-              )}
-
-              {captureSources.length > 0 && (
-                <>
-                  <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                    默认大小：<span className="rsetup-value">{captureSize}px</span>
-                  </div>
-                  <input
-                    type="range" min={160} max={800} value={captureSize}
-                    onChange={(e) => onCaptureSizeChange(Number(e.target.value))}
-                    className="rsetup-slider"
-                  />
-                  <div className="rsetup-range-labels"><span>小</span><span>大</span></div>
-                </>
-              )}
-
-              {captureIsFull && (
-                <div style={{ fontSize: 11, color: '#e03131', marginTop: 6 }}>已达最大数量 (4)</div>
-              )}
-
-              <div style={{ marginTop: 10, fontSize: 12, color: '#888', lineHeight: 1.5 }}>
-                💡 采集的画面将显示为浮动窗口，可拖拽调整位置。录制时会自动合成到视频中。
-              </div>
-            </div>
-
-            {/* Cursor highlight */}
-            <div className="rsetup-section">
-              <div className="rsetup-section-label">鼠标光标效果</div>
-              <div className="rsetup-toggle-row">
-                <span className="rsetup-toggle-label">录制时显示光标高亮</span>
-                <label className="toggle-switch">
-                  <input type="checkbox" checked={cursorHighlight} onChange={(e) => onCursorHighlightChange(e.target.checked)} />
-                  <span className="toggle-slider" />
-                </label>
-              </div>
-              {cursorHighlight && (
-                <>
-                  <div className="rsetup-section-label" style={{ marginTop: 10 }}>光标颜色</div>
-                  <div className="rsetup-cursor-colors">
-                    {CURSOR_COLORS.map((c) => (
-                      <button
-                        key={c}
-                        className={`rsetup-cursor-dot ${cursorHighlightColor === c ? "active" : ""}`}
-                        style={{ background: c }}
-                        onClick={() => onCursorHighlightColorChange(c)}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Smart Zoom */}
-            <div className="rsetup-section">
-              <div className="rsetup-section-label">智能缩放</div>
-              <div className="rsetup-toggle-row">
-                <span className="rsetup-toggle-label">录制时自动聚焦到鼠标操作区域</span>
-                <label className="toggle-switch">
-                  <input type="checkbox" checked={smartZoom} onChange={(e) => onSmartZoomChange(e.target.checked)} />
-                  <span className="toggle-slider" />
-                </label>
-              </div>
-              {smartZoom && (
-                <>
-                  <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                    缩放倍率：<span className="rsetup-value">{smartZoomLevel.toFixed(1)}x</span>
-                  </div>
-                  <input
-                    type="range" min={1.2} max={3.0} step={0.1} value={smartZoomLevel}
-                    onChange={(e) => onSmartZoomLevelChange(Number(e.target.value))}
-                    className="rsetup-slider"
-                  />
-                  <div className="rsetup-range-labels"><span>微缩</span><span>特写</span></div>
-
-                  <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                    过渡速度：<span className="rsetup-value">
-                      {SMART_ZOOM_SPEED_PRESETS.find(p => p.value === smartZoomTransition)?.label ?? `${smartZoomTransition}ms`}
-                    </span>
-                  </div>
-                  <div className="rsetup-shape-btns rsetup-shape-btns-3">
-                    {SMART_ZOOM_SPEED_PRESETS.map((preset) => (
+            {/* ══ Tab: 画面 (Display) ══ */}
+            {activeTab === "display" && (
+              <>
+                {/* Aspect ratio */}
+                <div className="rsetup-section">
+                  <div className="rsetup-section-label">画面比例</div>
+                  <div className="rsetup-aspect-grid">
+                    {ASPECT_PRESETS.map((preset) => (
                       <button
                         key={preset.value}
-                        className={`rsetup-shape-btn ${smartZoomTransition === preset.value ? "active" : ""}`}
-                        onClick={() => onSmartZoomTransitionChange(preset.value)}
+                        className={`rsetup-aspect-card ${aspectRatio === preset.value ? "active" : ""}`}
+                        onClick={() => onAspectRatioChange(preset.value)}
                       >
-                        {preset.label}
+                        <span className="rsetup-aspect-ratio">{preset.label}</span>
+                        <span className="rsetup-aspect-sub">{preset.sub}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Video quality: resolution + framerate + bitrate */}
+                <div className="rsetup-section">
+                  <div className="rsetup-section-label">视频质量</div>
+
+                  {/* Resolution */}
+                  <div className="rsetup-sub-label">分辨率</div>
+                  <div className="rsetup-aspect-grid rsetup-res-grid">
+                    {RESOLUTION_PRESETS.map((preset) => {
+                      const key = `${preset.width}x${preset.height}`;
+                      return (
+                        <button
+                          key={key}
+                          className={`rsetup-aspect-card ${resolution === key ? "active" : ""}`}
+                          onClick={() => onResolutionChange(key)}
+                        >
+                          <span className="rsetup-aspect-ratio">{preset.label}</span>
+                          <span className="rsetup-aspect-sub">{preset.sub}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Frame rate */}
+                  <div className="rsetup-sub-label" style={{ marginTop: 14 }}>帧率</div>
+                  <div className="rsetup-shape-btns rsetup-shape-btns-3">
+                    {FRAME_RATE_PRESETS.map((fps) => (
+                      <button
+                        key={fps}
+                        className={`rsetup-shape-btn ${frameRate === fps ? "active" : ""}`}
+                        onClick={() => onFrameRateChange(fps)}
+                      >
+                        {fps} fps
                       </button>
                     ))}
                   </div>
 
-                  <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                    回退延迟：<span className="rsetup-value">{(smartZoomIdleDelay / 1000).toFixed(1)}s</span>
+                  {/* Bitrate / quality */}
+                  <div className="rsetup-sub-label" style={{ marginTop: 14 }}>
+                    画质：<span className="rsetup-value">{currentBitrateLabel}</span>
                   </div>
                   <input
-                    type="range" min={500} max={3000} step={100} value={smartZoomIdleDelay}
-                    onChange={(e) => onSmartZoomIdleDelayChange(Number(e.target.value))}
+                    type="range"
+                    min={0}
+                    max={BITRATE_LEVELS.length - 1}
+                    step={1}
+                    value={bitrateIndex >= 0 ? bitrateIndex : 2}
+                    onChange={(e) => onVideoBitrateChange(BITRATE_LEVELS[Number(e.target.value)].value)}
                     className="rsetup-slider"
                   />
-                  <div className="rsetup-range-labels"><span>快速回退</span><span>长时间保持</span></div>
+                  <div className="rsetup-range-labels">
+                    {BITRATE_LEVELS.map((b) => (
+                      <span key={b.value}>{b.label}</span>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
-                  <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                    跟随灵敏度：<span className="rsetup-value">
-                      {smartZoomDamping <= 0.02 ? "极柔" : smartZoomDamping <= 0.04 ? "柔和" : smartZoomDamping <= 0.08 ? "适中" : "灵敏"}
-                    </span>
+            {/* ══ Tab: 背景 (Background) ══ */}
+            {activeTab === "background" && (
+              <>
+                {/* Background */}
+                <div className="rsetup-section">
+                  <div className="rsetup-section-label">背景</div>
+                  <div className="rsetup-bg-tabs">
+                    {BG_CATEGORIES.map((cat) => (
+                      <button
+                        key={cat.id}
+                        className={`rsetup-bg-tab ${bgCategory === cat.id ? "active" : ""}`}
+                        onClick={() => setBgCategory(cat.id)}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                  <button className="rsetup-random-btn" onClick={randomBg}>
+                    <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M10 2v3M10 15v3M18 10h-3M5 10H2M15.5 4.5l-2 2M6.5 13.5l-2 2M15.5 15.5l-2-2M6.5 6.5l-2-2" /></svg> 随机选择壁纸
+                  </button>
+                  <div className="rsetup-bg-grid">
+                    {filteredPresets.map((preset) => (
+                      <button
+                        key={preset.id}
+                        className={`rsetup-bg-swatch ${bgMatch(preset.bg, background) ? "active" : ""}`}
+                        style={{ background: preset.css }}
+                        onClick={() => onBackgroundChange(preset.bg)}
+                      />
+                    ))}
+                    <button
+                      className={`rsetup-bg-swatch rsetup-bg-custom ${isCustom ? "active" : ""}`}
+                      onClick={() => customColorRef.current?.click()}
+                      title="自定义颜色"
+                    />
+                    <input
+                      ref={customColorRef}
+                      type="color"
+                      value={customColor}
+                      onChange={(e) =>
+                        onBackgroundChange({ type: "solid", color: e.target.value })
+                      }
+                      style={{ position: "absolute", opacity: 0, pointerEvents: "none", width: 0, height: 0 }}
+                    />
+                  </div>
+                </div>
+
+                {/* Canvas border radius */}
+                <div className="rsetup-section">
+                  <div className="rsetup-section-label">
+                    圆角半径：<span className="rsetup-value">{canvasBorderRadius}PX</span>
                   </div>
                   <input
-                    type="range" min={0.01} max={0.15} step={0.01} value={smartZoomDamping}
-                    onChange={(e) => onSmartZoomDampingChange(Number(e.target.value))}
+                    type="range" min={0} max={50} value={canvasBorderRadius}
+                    onChange={(e) => onCanvasBorderRadiusChange(Number(e.target.value))}
                     className="rsetup-slider"
                   />
-                  <div className="rsetup-range-labels"><span>极柔（几乎不晃）</span><span>灵敏（紧跟鼠标）</span></div>
-                </>
-              )}
-            </div>
+                  <div className="rsetup-range-labels"><span>直角</span><span>圆角</span></div>
+                </div>
+
+                {/* Canvas padding */}
+                <div className="rsetup-section">
+                  <div className="rsetup-section-label">
+                    画布边距：<span className="rsetup-value">{canvasPadding}PX</span>
+                  </div>
+                  <input
+                    type="range" min={0} max={120} value={canvasPadding}
+                    onChange={(e) => onCanvasPaddingChange(Number(e.target.value))}
+                    className="rsetup-slider"
+                  />
+                  <div className="rsetup-range-labels"><span>无</span><span>大</span></div>
+                </div>
+              </>
+            )}
+
+            {/* ══ Tab: 设备 (Devices) ══ */}
+            {activeTab === "devices" && (
+              <>
+                {/* Webcam */}
+                <div className="rsetup-section">
+                  <div className="rsetup-section-label">摄像头</div>
+                  <div className="rsetup-toggle-row">
+                    <span className="rsetup-toggle-label">录制时显示摄像头画面</span>
+                    <label className="toggle-switch">
+                      <input type="checkbox" checked={isWebcamOn} onChange={() => onToggleWebcam()} />
+                      <span className="toggle-slider" />
+                    </label>
+                  </div>
+
+                  {isWebcamOn && (
+                    <>
+                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>
+                        大小：<span className="rsetup-value">{webcamSize}px</span>
+                      </div>
+                      <input
+                        type="range" min={80} max={400} value={webcamSize}
+                        onChange={(e) => onWebcamSizeChange(Number(e.target.value))}
+                        className="rsetup-slider"
+                      />
+                      <div className="rsetup-range-labels"><span>小</span><span>大</span></div>
+
+                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>形状</div>
+                      <div className="rsetup-shape-btns rsetup-shape-btns-4">
+                        <button
+                          className={`rsetup-shape-btn ${webcamShape === "rectangle" ? "active" : ""}`}
+                          onClick={() => onWebcamShapeChange("rectangle")}
+                        >
+                          <svg width={14} height={10} viewBox="0 0 16 10" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="14" height="8" rx="1.5" /></svg> 长方形
+                        </button>
+                        <button
+                          className={`rsetup-shape-btn ${webcamShape === "square" ? "active" : ""}`}
+                          onClick={() => onWebcamShapeChange("square")}
+                        >
+                          <svg width={12} height={12} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="12" height="12" rx="1.5" /></svg> 正方形
+                        </button>
+                        <button
+                          className={`rsetup-shape-btn ${webcamShape === "circle" ? "active" : ""}`}
+                          onClick={() => onWebcamShapeChange("circle")}
+                        >
+                          <svg width={12} height={12} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="7" r="6" /></svg> 圆形
+                        </button>
+                        <button
+                          className={`rsetup-shape-btn ${webcamShape === "squircle" ? "active" : ""}`}
+                          onClick={() => onWebcamShapeChange("squircle")}
+                        >
+                          <svg width={12} height={12} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="12" height="12" rx="4" /></svg> 超椭圆
+                        </button>
+                      </div>
+
+                      {/* Corner radius slider for non-circle and non-squircle shapes */}
+                      {webcamShape !== "circle" && webcamShape !== "squircle" && (
+                        <>
+                          <div className="rsetup-section-label" style={{ marginTop: 14 }}>
+                            边框圆角：<span className="rsetup-value">{webcamCornerRadius}%</span>
+                          </div>
+                          <input
+                            type="range" min={0} max={50} value={webcamCornerRadius}
+                            onChange={(e) => onWebcamCornerRadiusChange(Number(e.target.value))}
+                            className="rsetup-slider"
+                          />
+                          <div className="rsetup-range-labels"><span>直角</span><span>圆角</span></div>
+                        </>
+                      )}
+
+                      {/* Camera device selector */}
+                      {videoDevices.length > 0 && (
+                        <>
+                          <div className="rsetup-section-label" style={{ marginTop: 14 }}>摄像头设备</div>
+                          <select
+                            className="rsetup-device-select"
+                            value={videoDeviceId}
+                            onChange={(e) => onVideoDeviceChange(e.target.value)}
+                          >
+                            <option value="">默认</option>
+                            {videoDevices.map((d) => (
+                              <option key={d.deviceId} value={d.deviceId}>{d.label}</option>
+                            ))}
+                          </select>
+                        </>
+                      )}
+
+                      {/* Microphone selector */}
+                      {audioDevices.length > 0 && (
+                        <>
+                          <div className="rsetup-section-label" style={{ marginTop: 14 }}>麦克风设备</div>
+                          <select
+                            className="rsetup-device-select"
+                            value={audioDeviceId}
+                            onChange={(e) => onAudioDeviceChange(e.target.value)}
+                          >
+                            <option value="">默认</option>
+                            {audioDevices.map((d) => (
+                              <option key={d.deviceId} value={d.deviceId}>{d.label}</option>
+                            ))}
+                          </select>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Capture source */}
+                <div className="rsetup-section">
+                  <div className="rsetup-section-label">采集源</div>
+
+                  {/* Quick-add buttons */}
+                  <div className="rsetup-shape-btns" style={{ marginBottom: 10 }}>
+                    <button
+                      className="rsetup-shape-btn"
+                      disabled={captureIsFull}
+                      onClick={() => onAddScreenCapture()}
+                    >
+                      <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="16" height="11" rx="2" /><line x1="7" y1="17" x2="13" y2="17" /><line x1="10" y1="14" x2="10" y2="17" /></svg> 屏幕采集
+                    </button>
+                    <button
+                      className="rsetup-shape-btn"
+                      disabled={captureIsFull || videoDevices.length === 0}
+                      onClick={() => {
+                        if (videoDevices.length > 0) onAddDeviceCapture(videoDevices[0].deviceId, videoDevices[0].label);
+                      }}
+                    >
+                      <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="12" height="10" rx="1.5" /><path d="M14 9l4-2v6l-4-2z" /></svg> 设备采集
+                    </button>
+                  </div>
+
+                  {/* Active sources list */}
+                  {captureSources.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {captureSources.map((src) => (
+                        <div key={src.id} style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '6px 10px', background: '#f5f5f5',
+                          borderRadius: 8, fontSize: 12,
+                        }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4cd964', flexShrink: 0 }} />
+                          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {src.type === 'screen'
+                          ? <svg width={12} height={12} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><rect x="2" y="3" width="16" height="11" rx="2" /><line x1="7" y1="17" x2="13" y2="17" /><line x1="10" y1="14" x2="10" y2="17" /></svg>
+                          : <svg width={12} height={12} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><rect x="2" y="5" width="12" height="10" rx="1.5" /><path d="M14 9l4-2v6l-4-2z" /></svg>
+                        } {src.label}
+                          </span>
+                          <button
+                            onClick={() => onRemoveCapture(src.id)}
+                            style={{
+                              background: 'none', border: 'none', cursor: 'pointer',
+                              color: '#e03131', fontSize: 11, fontWeight: 600,
+                              padding: '2px 6px', borderRadius: 4,
+                            }}
+                          >✕ 关闭</button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 12, color: '#aaa', padding: '6px 0' }}>
+                      暂无活跃采集源。点击上方按钮添加，或使用工具栏㌀采集㌁按钮。
+                    </div>
+                  )}
+
+                  {captureSources.length > 0 && (
+                    <>
+                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>
+                        默认大小：<span className="rsetup-value">{captureSize}px</span>
+                      </div>
+                      <input
+                        type="range" min={160} max={800} value={captureSize}
+                        onChange={(e) => onCaptureSizeChange(Number(e.target.value))}
+                        className="rsetup-slider"
+                      />
+                      <div className="rsetup-range-labels"><span>小</span><span>大</span></div>
+                    </>
+                  )}
+
+                  {captureIsFull && (
+                    <div style={{ fontSize: 11, color: '#e03131', marginTop: 6 }}>已达最大数量 (4)</div>
+                  )}
+
+                  <div style={{ marginTop: 10, fontSize: 12, color: '#888', lineHeight: 1.5 }}>
+                    <svg width={12} height={12} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, verticalAlign: 'middle', marginRight: 4 }}><path d="M7 15h6M8 18h4M10 2a6 6 0 014 10.5V14H6v-1.5A6 6 0 0110 2z" /></svg>采集的画面将显示为浮动窗口，可拖拽调整位置。录制时会自动合成到视频中。
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ══ Tab: 效果 (Effects) ══ */}
+            {activeTab === "effects" && (
+              <>
+                {/* Cursor highlight */}
+                <div className="rsetup-section">
+                  <div className="rsetup-section-label">鼠标光标效果</div>
+                  <div className="rsetup-toggle-row">
+                    <span className="rsetup-toggle-label">录制时显示光标高亮</span>
+                    <label className="toggle-switch">
+                      <input type="checkbox" checked={cursorHighlight} onChange={(e) => {
+                        const on = e.target.checked;
+                        onCursorHighlightChange(on);
+                        if (on) onCursorMagnifyChange(false);
+                      }} />
+                      <span className="toggle-slider" />
+                    </label>
+                  </div>
+                  {cursorHighlight && (
+                    <>
+                      <div className="rsetup-section-label" style={{ marginTop: 10 }}>光标颜色</div>
+                      <div className="rsetup-cursor-colors">
+                        {CURSOR_COLORS.map((c) => (
+                          <button
+                            key={c}
+                            className={`rsetup-cursor-dot ${cursorHighlightColor === c ? "active" : ""}`}
+                            style={{ background: c }}
+                            onClick={() => onCursorHighlightColorChange(c)}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Cursor magnify */}
+                <div className="rsetup-section">
+                  <div className="rsetup-section-label">放大鼠标</div>
+                  <div className="rsetup-toggle-row">
+                    <span className="rsetup-toggle-label">录制时显示放大版鼠标光标</span>
+                    <label className="toggle-switch">
+                      <input type="checkbox" checked={cursorMagnify} onChange={(e) => {
+                        const on = e.target.checked;
+                        onCursorMagnifyChange(on);
+                        if (on) onCursorHighlightChange(false);
+                      }} />
+                      <span className="toggle-slider" />
+                    </label>
+                  </div>
+                  {cursorMagnify && (
+                    <>
+                      <div className="rsetup-section-label" style={{ marginTop: 10 }}>
+                        放大倍率：<span className="rsetup-value">{cursorMagnifySize.toFixed(1)}x</span>
+                      </div>
+                      <input
+                        type="range" min={1.2} max={3.0} step={0.1} value={cursorMagnifySize}
+                        onChange={(e) => onCursorMagnifySizeChange(Number(e.target.value))}
+                        className="rsetup-slider"
+                      />
+                      <div className="rsetup-range-labels"><span>微放大</span><span>超大</span></div>
+                    </>
+                  )}
+                </div>
+
+                {/* Smart Zoom */}
+                <div className="rsetup-section">
+                  <div className="rsetup-section-label">智能缩放</div>
+                  <div className="rsetup-toggle-row">
+                    <span className="rsetup-toggle-label">录制时自动聚焦到鼠标操作区域</span>
+                    <label className="toggle-switch">
+                      <input type="checkbox" checked={smartZoom} onChange={(e) => onSmartZoomChange(e.target.checked)} />
+                      <span className="toggle-slider" />
+                    </label>
+                  </div>
+                  {smartZoom && (
+                    <>
+                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>
+                        缩放倍率：<span className="rsetup-value">{smartZoomLevel.toFixed(1)}x</span>
+                      </div>
+                      <input
+                        type="range" min={1.2} max={3.0} step={0.1} value={smartZoomLevel}
+                        onChange={(e) => onSmartZoomLevelChange(Number(e.target.value))}
+                        className="rsetup-slider"
+                      />
+                      <div className="rsetup-range-labels"><span>微缩</span><span>特写</span></div>
+
+                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>
+                        过渡速度：<span className="rsetup-value">
+                          {SMART_ZOOM_SPEED_PRESETS.find(p => p.value === smartZoomTransition)?.label ?? `${smartZoomTransition}ms`}
+                        </span>
+                      </div>
+                      <div className="rsetup-shape-btns rsetup-shape-btns-3">
+                        {SMART_ZOOM_SPEED_PRESETS.map((preset) => (
+                          <button
+                            key={preset.value}
+                            className={`rsetup-shape-btn ${smartZoomTransition === preset.value ? "active" : ""}`}
+                            onClick={() => onSmartZoomTransitionChange(preset.value)}
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>
+                        回退延迟：<span className="rsetup-value">{(smartZoomIdleDelay / 1000).toFixed(1)}s</span>
+                      </div>
+                      <input
+                        type="range" min={500} max={3000} step={100} value={smartZoomIdleDelay}
+                        onChange={(e) => onSmartZoomIdleDelayChange(Number(e.target.value))}
+                        className="rsetup-slider"
+                      />
+                      <div className="rsetup-range-labels"><span>快速回退</span><span>长时间保持</span></div>
+
+                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>
+                        跟随灵敏度：<span className="rsetup-value">
+                          {smartZoomDamping <= 0.02 ? "极柔" : smartZoomDamping <= 0.04 ? "柔和" : smartZoomDamping <= 0.08 ? "适中" : "灵敏"}
+                        </span>
+                      </div>
+                      <input
+                        type="range" min={0.01} max={0.15} step={0.01} value={smartZoomDamping}
+                        onChange={(e) => onSmartZoomDampingChange(Number(e.target.value))}
+                        className="rsetup-slider"
+                      />
+                      <div className="rsetup-range-labels"><span>极柔（几乎不晃）</span><span>灵敏（紧跟鼠标）</span></div>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
 
           </div>{/* /rsetup-body */}
 

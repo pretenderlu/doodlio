@@ -124,6 +124,8 @@ function WhiteboardApp() {
   const [audioDeviceId, setAudioDeviceId] = useState(saved.audioDeviceId);
   const [cursorHighlight, setCursorHighlight] = useState(saved.cursorHighlight);
   const [cursorHighlightColor, setCursorHighlightColor] = useState(saved.cursorHighlightColor);
+  const [cursorMagnify, setCursorMagnify] = useState(saved.cursorMagnify);
+  const [cursorMagnifySize, setCursorMagnifySize] = useState(saved.cursorMagnifySize);
   const [resolution, setResolution] = useState(saved.resolution);
   const [frameRate, setFrameRate] = useState<FrameRate>(saved.frameRate);
   const [videoBitrate, setVideoBitrate] = useState(saved.videoBitrate);
@@ -386,6 +388,8 @@ function WhiteboardApp() {
         getCaptureStreams: capture.getStreams,
         cursorHighlight,
         cursorHighlightColor,
+        cursorMagnify,
+        cursorMagnifySize,
         resolution,
         frameRate,
         videoBitrate,
@@ -398,7 +402,7 @@ function WhiteboardApp() {
     } catch (err) {
       console.error("录制启动失败:", err);
     }
-  }, [startRecording, videoRef, capture, wcProps.borderRadius, wcProps.shapeType, background, canvasPadding, canvasBorderRadius, audioDeviceId, cursorHighlight, cursorHighlightColor, resolution, frameRate, videoBitrate, smartZoom, smartZoomLevel, smartZoomTransition, smartZoomIdleDelay, smartZoomDamping]);
+  }, [startRecording, videoRef, capture, wcProps.borderRadius, wcProps.shapeType, background, canvasPadding, canvasBorderRadius, audioDeviceId, cursorHighlight, cursorHighlightColor, cursorMagnify, cursorMagnifySize, resolution, frameRate, videoBitrate, smartZoom, smartZoomLevel, smartZoomTransition, smartZoomIdleDelay, smartZoomDamping]);
 
   // Save current settings as defaults
   const handleSaveDefaults = useCallback(() => {
@@ -414,6 +418,8 @@ function WhiteboardApp() {
       audioDeviceId,
       cursorHighlight,
       cursorHighlightColor,
+      cursorMagnify,
+      cursorMagnifySize,
       resolution,
       frameRate,
       videoBitrate,
@@ -424,7 +430,7 @@ function WhiteboardApp() {
       smartZoomDamping,
       captureSize,
     });
-  }, [aspectRatio, background, canvasBorderRadius, canvasPadding, webcamShape, webcamSize, webcamCornerRadius, videoDeviceId, audioDeviceId, cursorHighlight, cursorHighlightColor, resolution, frameRate, videoBitrate, smartZoom, smartZoomLevel, smartZoomTransition, smartZoomIdleDelay, smartZoomDamping, captureSize]);
+  }, [aspectRatio, background, canvasBorderRadius, canvasPadding, webcamShape, webcamSize, webcamCornerRadius, videoDeviceId, audioDeviceId, cursorHighlight, cursorHighlightColor, cursorMagnify, cursorMagnifySize, resolution, frameRate, videoBitrate, smartZoom, smartZoomLevel, smartZoomTransition, smartZoomIdleDelay, smartZoomDamping, captureSize]);
 
   // Reset all settings to factory defaults
   const handleReset = useCallback(() => {
@@ -440,6 +446,8 @@ function WhiteboardApp() {
     setAudioDeviceId(d.audioDeviceId);
     setCursorHighlight(d.cursorHighlight);
     setCursorHighlightColor(d.cursorHighlightColor);
+    setCursorMagnify(d.cursorMagnify);
+    setCursorMagnifySize(d.cursorMagnifySize);
     setResolution(d.resolution);
     setFrameRate(d.frameRate);
     setVideoBitrate(d.videoBitrate);
@@ -729,6 +737,10 @@ function WhiteboardApp() {
           onCursorHighlightChange={setCursorHighlight}
           cursorHighlightColor={cursorHighlightColor}
           onCursorHighlightColorChange={setCursorHighlightColor}
+          cursorMagnify={cursorMagnify}
+          onCursorMagnifyChange={setCursorMagnify}
+          cursorMagnifySize={cursorMagnifySize}
+          onCursorMagnifySizeChange={setCursorMagnifySize}
           smartZoom={smartZoom}
           onSmartZoomChange={setSmartZoom}
           smartZoomLevel={smartZoomLevel}

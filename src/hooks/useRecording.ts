@@ -54,6 +54,8 @@ interface RecordingStartOptions {
   audioDeviceId?: string;
   cursorHighlight?: boolean;
   cursorHighlightColor?: string;
+  cursorMagnify?: boolean;
+  cursorMagnifySize?: number;   // scale factor, e.g. 1.5
   resolution?: string;       // e.g. "1920x1080"
   frameRate?: number;        // e.g. 30
   videoBitrate?: number;     // bps, e.g. 8_000_000
@@ -117,6 +119,7 @@ export function useRecording() {
         webcamShapeType = "circle", getCaptureVideos, getCaptureStreams,
         background, canvasPadding = 0, canvasBorderRadius = 0,
         audioDeviceId, cursorHighlight = false, cursorHighlightColor = "#e03131",
+        cursorMagnify = false, cursorMagnifySize = 1.5,
         resolution = "1920x1080", frameRate = 30, videoBitrate = 8_000_000,
         smartZoom = false, smartZoomLevel = 1.5,
         smartZoomTransition = 800, smartZoomIdleDelay = 1500,
@@ -127,7 +130,7 @@ export function useRecording() {
       const dpr = window.devicePixelRatio || 1;
 
       // Cursor tracking for highlight and smart zoom
-      const needsCursorTracking = cursorHighlight || smartZoom;
+      const needsCursorTracking = cursorHighlight || cursorMagnify || smartZoom;
       if (needsCursorTracking) {
         const frameEl = document.querySelector(".canvas-frame") as HTMLElement | null;
         if (frameEl) {
@@ -400,6 +403,36 @@ export function useRecording() {
           compCtx.beginPath();
           compCtx.arc(cx, cy, 4 * resScale * dpr, 0, Math.PI * 2);
           compCtx.fill();
+          compCtx.restore();
+        }
+
+        // 3a) Magnified cursor — draw an enlarged arrow pointer
+        if (cursorMagnify && cursorPosRef.current) {
+          const curX = cursorPosRef.current.x;
+          const curY = cursorPosRef.current.y;
+          const canvasScale = padPx > 0 ? insetW / W : 1;
+          const cx = insetX + curX * resScale * canvasScale;
+          const cy = insetY + curY * resScale * canvasScale;
+          const s = cursorMagnifySize * resScale * dpr;
+          compCtx.save();
+          compCtx.translate(cx, cy);
+          // Arrow pointer shape (standard cursor), scaled
+          compCtx.beginPath();
+          compCtx.moveTo(0, 0);
+          compCtx.lineTo(0, 14 * s);
+          compCtx.lineTo(3.8 * s, 10.8 * s);
+          compCtx.lineTo(7.2 * s, 17.2 * s);
+          compCtx.lineTo(9.6 * s, 16 * s);
+          compCtx.lineTo(6.2 * s, 9.6 * s);
+          compCtx.lineTo(11 * s, 9 * s);
+          compCtx.closePath();
+          // White fill with dark outline
+          compCtx.fillStyle = "#fff";
+          compCtx.fill();
+          compCtx.strokeStyle = "#222";
+          compCtx.lineWidth = 1.2 * s;
+          compCtx.lineJoin = "round";
+          compCtx.stroke();
           compCtx.restore();
         }
 

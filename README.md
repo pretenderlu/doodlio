@@ -23,6 +23,14 @@ npm run dev
 
 或双击 `启动白板.vbs` 一键启动。
 
+### Docker 部署
+
+```bash
+docker compose up -d
+```
+
+访问 `http://localhost:8080` 即可使用。
+
 ## 快捷键
 
 | 快捷键 | 功能 |
