@@ -47,22 +47,23 @@ export function Toolbar({ onContextMenu }: ToolbarProps) {
           <div className="toolbar-group">
             <button
               className={`tool-btn mini ${layoutDirection === "right" ? "active" : ""}`}
-              onClick={() => setLayoutDirection("right")}
+              onClick={(e) => { e.stopPropagation(); setLayoutDirection("right"); }}
               data-tooltip="水平布局"
             >→</button>
             <button
               className={`tool-btn mini ${layoutDirection === "down" ? "active" : ""}`}
-              onClick={() => setLayoutDirection("down")}
+              onClick={(e) => { e.stopPropagation(); setLayoutDirection("down"); }}
               data-tooltip="垂直布局"
             >↓</button>
             <button
               className={`tool-btn mini ${layoutDirection === "radial" ? "active" : ""}`}
-              onClick={() => setLayoutDirection("radial")}
+              onClick={(e) => { e.stopPropagation(); setLayoutDirection("radial"); }}
               data-tooltip="径向布局"
             >◎</button>
             <button
               className="tool-btn"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 const positions = layoutMindMapTree(state.elements, layoutDirection);
                 if (positions.size > 0) {
                   dispatch({ type: "LAYOUT_MINDMAP", positions });
