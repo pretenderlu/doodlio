@@ -686,13 +686,6 @@ function WhiteboardApp() {
                   {renderToolIcon("teleprompter", "tool-icon")}
                   <span>提词器</span>
                 </button>
-                <button
-                  className="mobile-more-item"
-                  onClick={() => { capture.addScreenCapture(); setShowMobileMore(false); }}
-                >
-                  {renderToolIcon("capture", "tool-icon")}
-                  <span>采集源</span>
-                </button>
                 <div style={{ height: 1, background: '#eee', margin: '4px 10px' }} />
                 <button
                   className="mobile-more-item"

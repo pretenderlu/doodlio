@@ -883,3 +883,108 @@
 .rsetup-res-grid {
   grid-template-columns: repeat(4, 1fr);
 }
+
+/* ---- Mobile: recording setup modal ---- */
+@media (max-width: 768px) {
+  .rsetup-modal {
+    flex-direction: column;
+    width: 94vw;
+    max-height: 90vh;
+  }
+
+  .rsetup-left {
+    width: 100%;
+    padding: 16px 20px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .rsetup-preview-wrap {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .rsetup-github-link {
+    position: static;
+  }
+
+  .rsetup-right {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .rsetup-header {
+    padding: 14px 16px 10px;
+  }
+
+  .rsetup-title {
+    font-size: 16px;
+  }
+
+  .rsetup-tabs {
+    padding: 0 16px 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .rsetup-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rsetup-tab {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .rsetup-body {
+    padding: 12px 16px;
+    gap: 16px;
+  }
+
+  .rsetup-aspect-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .rsetup-aspect-card {
+    padding: 8px 4px;
+  }
+
+  .rsetup-aspect-ratio {
+    font-size: 13px;
+  }
+
+  .rsetup-aspect-sub {
+    font-size: 10px;
+  }
+
+  .rsetup-shape-btns {
+    gap: 6px;
+  }
+
+  .rsetup-shape-btn {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .rsetup-res-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .rsetup-bg-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .rsetup-footer {
+    padding: 10px 16px 14px;
+  }
+
+  .rsetup-confirm {
+    height: 40px;
+    font-size: 14px;
+  }
+}
