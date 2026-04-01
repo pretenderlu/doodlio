@@ -37,9 +37,10 @@ interface CanvasProps {
   aspectRatio: string;
   canvasBg?: string;
   laserCanvas?: React.RefObject<HTMLCanvasElement | null>;
+  onInteract?: () => void;
 }
 
-export function Canvas({ aspectRatio, canvasBg = "#ffffff", laserCanvas }: CanvasProps) {
+export function Canvas({ aspectRatio, canvasBg = "#ffffff", laserCanvas, onInteract }: CanvasProps) {
   const staticCanvas = useRef<HTMLCanvasElement>(null);
   const dynamicCanvas = useRef<HTMLCanvasElement>(null);
   const { state, resetViewport, zoomTo } = useWhiteboard();
@@ -141,6 +142,7 @@ export function Canvas({ aspectRatio, canvasBg = "#ffffff", laserCanvas }: Canva
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
+      onInteract?.();
       if (state.activeTool === "text") {
         const [wx, wy] = getCanvasPoint(e);
         startEditing(wx, wy);
@@ -150,7 +152,7 @@ export function Canvas({ aspectRatio, canvasBg = "#ffffff", laserCanvas }: Canva
       if (mindMap.handlePointerDown(e, getCanvasPoint as (e: React.PointerEvent) => [number, number])) return;
       handlePointerDown(e);
     },
-    [state.activeTool, handlePointerDown, startEditing, mindMap, getCanvasPoint]
+    [state.activeTool, handlePointerDown, startEditing, mindMap, getCanvasPoint, onInteract]
   );
 
   const onPointerMove = useCallback(

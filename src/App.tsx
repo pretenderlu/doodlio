@@ -150,6 +150,9 @@ function WhiteboardApp() {
   const [showMobileMore, setShowMobileMore] = useState(false);
   const mobileMoreRef = useRef<HTMLDivElement>(null);
 
+  // Hide properties panel on mobile when drawing on canvas
+  const [propsPanelCollapsed, setPropsPanelCollapsed] = useState(false);
+
   // Close capture menu on outside click/touch
   useEffect(() => {
     if (!showCaptureMenu) return;
@@ -508,7 +511,7 @@ function WhiteboardApp() {
   return (
     <div className="app">
       <div className="toolbar-container">
-        <div className="toolbar-left">
+        <div className="toolbar-left" onPointerDown={() => setPropsPanelCollapsed(false)}>
           <HamburgerMenu
             canvasBg={canvasBg}
             onCanvasBgChange={setCanvasBg}
@@ -718,9 +721,11 @@ function WhiteboardApp() {
       </div>
 
       <div className="whiteboard-container">
-        <PropertiesPanel />
-        <Canvas aspectRatio={aspectRatio} canvasBg={canvasBg} laserCanvas={laserCanvasRef} />
-        <FloatingToolbar favorites={favorites} onContextMenu={handleFloatingContext} />
+        <PropertiesPanel collapsed={propsPanelCollapsed} />
+        <Canvas aspectRatio={aspectRatio} canvasBg={canvasBg} laserCanvas={laserCanvasRef} onInteract={() => setPropsPanelCollapsed(true)} />
+        <div onPointerDown={() => setPropsPanelCollapsed(false)}>
+          <FloatingToolbar favorites={favorites} onContextMenu={handleFloatingContext} />
+        </div>
         {showLayerPanel && <LayerPanel onClose={() => setShowLayerPanel(false)} />}
         {showSlidesPanel && (
           <SlidesPanel
