@@ -109,7 +109,8 @@ export function useRecording() {
   );
   const audioStreamRef = useRef<MediaStream | null>(null);
   const cursorPosRef = useRef<{ x: number; y: number } | null>(null);
-  const cursorListenerRef = useRef<((e: MouseEvent) => void) | null>(null);
+  const cursorListenerRef = useRef<((e: MouseEvent | TouchEvent) => void) | null>(null);
+  const isTouchDeviceRef = useRef(false);
   const mouseDownListenerRef = useRef<((e: MouseEvent) => void) | null>(null);
   const cameraRef = useRef<VirtualCamera | null>(null);
 
@@ -129,6 +130,7 @@ export function useRecording() {
       } = options;
       if (!staticCanvas || !dynamicCanvas) return;
 
+      isTouchDeviceRef.current = "ontouchstart" in window || navigator.maxTouchPoints > 0;
       const dpr = window.devicePixelRatio || 1;
 
       // Cursor tracking for highlight and smart zoom
@@ -136,22 +138,37 @@ export function useRecording() {
       if (needsCursorTracking) {
         const frameEl = document.querySelector(".canvas-frame") as HTMLElement | null;
         if (frameEl) {
-          const handler = (e: MouseEvent) => {
+          const handler = (e: MouseEvent | TouchEvent) => {
             const rect = frameEl.getBoundingClientRect();
+            let clientX: number, clientY: number;
+            if ("touches" in e && e.touches.length > 0) {
+              clientX = e.touches[0].clientX;
+              clientY = e.touches[0].clientY;
+            } else if ("clientX" in e) {
+              clientX = e.clientX;
+              clientY = e.clientY;
+            } else {
+              return;
+            }
             cursorPosRef.current = {
-              x: (e.clientX - rect.left) * dpr,
-              y: (e.clientY - rect.top) * dpr,
+              x: (clientX - rect.left) * dpr,
+              y: (clientY - rect.top) * dpr,
             };
             // Update smooth follow target (will be chased by lerp in compositeFrame)
             if (smartZoom && cameraRef.current && cameraRef.current.isZoomedIn) {
               const cam = cameraRef.current;
-              cam.followX = (e.clientX - rect.left) / rect.width;
-              cam.followY = (e.clientY - rect.top) / rect.height;
+              cam.followX = (clientX - rect.left) / rect.width;
+              cam.followY = (clientY - rect.top) / rect.height;
               cam.lastActivityTime = performance.now();
             }
           };
+          const clearCursor = () => { cursorPosRef.current = null; };
           frameEl.addEventListener("mousemove", handler);
-          frameEl.addEventListener("mouseleave", () => { cursorPosRef.current = null; });
+          frameEl.addEventListener("touchmove", handler, { passive: true });
+          frameEl.addEventListener("touchstart", handler, { passive: true });
+          frameEl.addEventListener("mouseleave", clearCursor);
+          frameEl.addEventListener("touchend", clearCursor);
+          frameEl.addEventListener("touchcancel", clearCursor);
           cursorListenerRef.current = handler;
         }
       }
@@ -408,7 +425,7 @@ export function useRecording() {
           compCtx.restore();
         }
 
-        // 3a) Magnified cursor — draw an enlarged arrow pointer
+        // 3a) Magnified cursor — draw an enlarged pointer
         if (cursorMagnify && cursorPosRef.current) {
           const curX = cursorPosRef.current.x;
           const curY = cursorPosRef.current.y;
@@ -418,23 +435,52 @@ export function useRecording() {
           const s = cursorMagnifySize * resScale * dpr;
           compCtx.save();
           compCtx.translate(cx, cy);
-          // Arrow pointer shape (standard cursor), scaled
-          compCtx.beginPath();
-          compCtx.moveTo(0, 0);
-          compCtx.lineTo(0, 14 * s);
-          compCtx.lineTo(3.8 * s, 10.8 * s);
-          compCtx.lineTo(7.2 * s, 17.2 * s);
-          compCtx.lineTo(9.6 * s, 16 * s);
-          compCtx.lineTo(6.2 * s, 9.6 * s);
-          compCtx.lineTo(11 * s, 9 * s);
-          compCtx.closePath();
-          // White fill with dark outline
-          compCtx.fillStyle = "#fff";
-          compCtx.fill();
-          compCtx.strokeStyle = "#222";
-          compCtx.lineWidth = 1.2 * s;
-          compCtx.lineJoin = "round";
-          compCtx.stroke();
+
+          if (isTouchDeviceRef.current) {
+            // Touch device: draw a finger/tap icon
+            compCtx.beginPath();
+            // Fingertip (round top)
+            compCtx.moveTo(0, -6 * s);
+            compCtx.bezierCurveTo(-3 * s, -6 * s, -4.5 * s, -4 * s, -4.5 * s, -1 * s);
+            // Left side of finger
+            compCtx.lineTo(-4.5 * s, 8 * s);
+            // Bottom (rounded)
+            compCtx.bezierCurveTo(-4.5 * s, 10 * s, -3 * s, 11 * s, 0, 11 * s);
+            compCtx.bezierCurveTo(3 * s, 11 * s, 4.5 * s, 10 * s, 4.5 * s, 8 * s);
+            // Right side of finger
+            compCtx.lineTo(4.5 * s, -1 * s);
+            compCtx.bezierCurveTo(4.5 * s, -4 * s, 3 * s, -6 * s, 0, -6 * s);
+            compCtx.closePath();
+            compCtx.fillStyle = "rgba(220, 220, 220, 0.85)";
+            compCtx.fill();
+            compCtx.strokeStyle = "rgba(160, 160, 160, 0.9)";
+            compCtx.lineWidth = 1.2 * s;
+            compCtx.lineJoin = "round";
+            compCtx.stroke();
+            // Fingernail highlight
+            compCtx.beginPath();
+            compCtx.ellipse(0, -3 * s, 2.5 * s, 1.8 * s, 0, 0, Math.PI * 2);
+            compCtx.fillStyle = "rgba(255, 255, 255, 0.6)";
+            compCtx.fill();
+          } else {
+            // Desktop: arrow pointer shape (standard cursor), scaled
+            compCtx.beginPath();
+            compCtx.moveTo(0, 0);
+            compCtx.lineTo(0, 14 * s);
+            compCtx.lineTo(3.8 * s, 10.8 * s);
+            compCtx.lineTo(7.2 * s, 17.2 * s);
+            compCtx.lineTo(9.6 * s, 16 * s);
+            compCtx.lineTo(6.2 * s, 9.6 * s);
+            compCtx.lineTo(11 * s, 9 * s);
+            compCtx.closePath();
+            compCtx.fillStyle = "#fff";
+            compCtx.fill();
+            compCtx.strokeStyle = "#222";
+            compCtx.lineWidth = 1.2 * s;
+            compCtx.lineJoin = "round";
+            compCtx.stroke();
+          }
+
           compCtx.restore();
         }
 
@@ -844,6 +890,8 @@ export function useRecording() {
         if (cursorListenerRef.current) {
           const frameEl = document.querySelector(".canvas-frame");
           frameEl?.removeEventListener("mousemove", cursorListenerRef.current as EventListener);
+          frameEl?.removeEventListener("touchmove", cursorListenerRef.current as EventListener);
+          frameEl?.removeEventListener("touchstart", cursorListenerRef.current as EventListener);
           cursorListenerRef.current = null;
           cursorPosRef.current = null;
         }
