@@ -56,6 +56,7 @@ interface RecordingStartOptions {
   cursorHighlightColor?: string;
   cursorMagnify?: boolean;
   cursorMagnifySize?: number;   // scale factor, e.g. 1.5
+  webcamZoom?: number;          // 1.0-3.0, crop into center of webcam feed
   resolution?: string;       // e.g. "1920x1080"
   frameRate?: number;        // e.g. 30
   videoBitrate?: number;     // bps, e.g. 8_000_000
@@ -120,6 +121,7 @@ export function useRecording() {
         background, canvasPadding = 0, canvasBorderRadius = 0,
         audioDeviceId, cursorHighlight = false, cursorHighlightColor = "#e03131",
         cursorMagnify = false, cursorMagnifySize = 1.5,
+        webcamZoom = 1.0,
         resolution = "1920x1080", frameRate = 30, videoBitrate = 8_000_000,
         smartZoom = false, smartZoomLevel = 1.5,
         smartZoomTransition = 800, smartZoomIdleDelay = 1500,
@@ -704,6 +706,15 @@ export function useRecording() {
               sh = vw / targetAspect;
               sx = 0;
               sy = (vh - sh) / 2;
+            }
+            // Apply webcam zoom — crop into center
+            if (webcamZoom > 1) {
+              const zoomedW = sw / webcamZoom;
+              const zoomedH = sh / webcamZoom;
+              sx += (sw - zoomedW) / 2;
+              sy += (sh - zoomedH) / 2;
+              sw = zoomedW;
+              sh = zoomedH;
             }
 
             offCtx.translate(dx + dw, dy);

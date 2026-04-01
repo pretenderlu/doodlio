@@ -15,6 +15,7 @@ interface WebcamOverlayProps {
   aspectRatio: number; // width / height (1 = square, 16/9 = landscape)
   shapeType: WebcamShape;
   initialWidth?: number;
+  zoom?: number; // 1.0 - 3.0, crop into center of video feed
 }
 
 const MIN_WIDTH = 80;
@@ -27,6 +28,7 @@ export function WebcamOverlay({
   aspectRatio,
   shapeType,
   initialWidth = 200,
+  zoom = 1.0,
 }: WebcamOverlayProps) {
   const [pos, setPos] = useState<Position>({ x: -1, y: -1 });
   const [width, setWidth] = useState(initialWidth);
@@ -180,7 +182,7 @@ export function WebcamOverlay({
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            transform: "scaleX(-1)",
+            transform: `scaleX(-1) scale(${zoom})`,
             pointerEvents: "none",
           }}
         />

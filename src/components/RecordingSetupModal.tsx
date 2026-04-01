@@ -147,6 +147,7 @@ export interface RecordingSettings {
   webcamShape: WebcamShape;
   webcamSize: number;
   webcamCornerRadius: number;
+  webcamZoom: number;            // 1.0 - 3.0, crop/zoom into center of feed
   videoDeviceId: string;
   audioDeviceId: string;
   cursorHighlight: boolean;
@@ -174,6 +175,7 @@ export const DEFAULT_SETTINGS: RecordingSettings = {
   webcamShape: "circle",
   webcamSize: 200,
   webcamCornerRadius: 12,
+  webcamZoom: 1.0,
   videoDeviceId: "",
   audioDeviceId: "",
   cursorHighlight: false,
@@ -363,6 +365,8 @@ interface Props {
   onWebcamSizeChange: (v: number) => void;
   webcamCornerRadius: number;
   onWebcamCornerRadiusChange: (v: number) => void;
+  webcamZoom: number;
+  onWebcamZoomChange: (v: number) => void;
   captureSources: CaptureSourceItem[];
   captureSize: number;
   onCaptureSizeChange: (v: number) => void;
@@ -493,6 +497,8 @@ export function RecordingSetupModal({
   onWebcamSizeChange,
   webcamCornerRadius,
   onWebcamCornerRadiusChange,
+  webcamZoom,
+  onWebcamZoomChange,
   captureSources,
   captureSize,
   onCaptureSizeChange,
@@ -782,6 +788,21 @@ export function RecordingSetupModal({
                         className="rsetup-slider"
                       />
                       <div className="rsetup-range-labels"><span>小</span><span>大</span></div>
+
+                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>
+                        画面裁剪：<span className="rsetup-value">{webcamZoom.toFixed(1)}x</span>
+                      </div>
+                      <input
+                        type="range" min={1.0} max={3.0} step={0.1} value={webcamZoom}
+                        onChange={(e) => onWebcamZoomChange(Number(e.target.value))}
+                        className="rsetup-slider"
+                      />
+                      <div className="rsetup-range-labels"><span>原始</span><span>放大裁剪</span></div>
+                      {webcamZoom > 1 && (
+                        <div style={{ fontSize: 11, color: '#888', marginTop: -2 }}>
+                          裁剪画面中心区域，适合广角前置摄像头放大人物
+                        </div>
+                      )}
 
                       <div className="rsetup-section-label" style={{ marginTop: 14 }}>形状</div>
                       <div className="rsetup-shape-btns rsetup-shape-btns-4">

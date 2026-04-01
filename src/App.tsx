@@ -120,6 +120,7 @@ function WhiteboardApp() {
   const [webcamShape, setWebcamShape] = useState<WebcamShape>(saved.webcamShape);
   const [webcamSize, setWebcamSize] = useState(saved.webcamSize);
   const [webcamCornerRadius, setWebcamCornerRadius] = useState(saved.webcamCornerRadius);
+  const [webcamZoom, setWebcamZoom] = useState(saved.webcamZoom);
   const [videoDeviceId, setVideoDeviceId] = useState(saved.videoDeviceId);
   const [audioDeviceId, setAudioDeviceId] = useState(saved.audioDeviceId);
   const [cursorHighlight, setCursorHighlight] = useState(saved.cursorHighlight);
@@ -380,6 +381,7 @@ function WhiteboardApp() {
         webcamVideo: videoRef.current,
         webcamBorderRadius: wcProps.borderRadius,
         webcamShapeType: wcProps.shapeType,
+        webcamZoom,
         getCaptureVideos: capture.getAllVideoElements,
         background,
         canvasPadding,
@@ -402,7 +404,7 @@ function WhiteboardApp() {
     } catch (err) {
       console.error("录制启动失败:", err);
     }
-  }, [startRecording, videoRef, capture, wcProps.borderRadius, wcProps.shapeType, background, canvasPadding, canvasBorderRadius, audioDeviceId, cursorHighlight, cursorHighlightColor, cursorMagnify, cursorMagnifySize, resolution, frameRate, videoBitrate, smartZoom, smartZoomLevel, smartZoomTransition, smartZoomIdleDelay, smartZoomDamping]);
+  }, [startRecording, videoRef, capture, wcProps.borderRadius, wcProps.shapeType, webcamZoom, background, canvasPadding, canvasBorderRadius, audioDeviceId, cursorHighlight, cursorHighlightColor, cursorMagnify, cursorMagnifySize, resolution, frameRate, videoBitrate, smartZoom, smartZoomLevel, smartZoomTransition, smartZoomIdleDelay, smartZoomDamping]);
 
   // Save current settings as defaults
   const handleSaveDefaults = useCallback(() => {
@@ -414,6 +416,7 @@ function WhiteboardApp() {
       webcamShape,
       webcamSize,
       webcamCornerRadius,
+      webcamZoom,
       videoDeviceId,
       audioDeviceId,
       cursorHighlight,
@@ -430,7 +433,7 @@ function WhiteboardApp() {
       smartZoomDamping,
       captureSize,
     });
-  }, [aspectRatio, background, canvasBorderRadius, canvasPadding, webcamShape, webcamSize, webcamCornerRadius, videoDeviceId, audioDeviceId, cursorHighlight, cursorHighlightColor, cursorMagnify, cursorMagnifySize, resolution, frameRate, videoBitrate, smartZoom, smartZoomLevel, smartZoomTransition, smartZoomIdleDelay, smartZoomDamping, captureSize]);
+  }, [aspectRatio, background, canvasBorderRadius, canvasPadding, webcamShape, webcamSize, webcamCornerRadius, webcamZoom, videoDeviceId, audioDeviceId, cursorHighlight, cursorHighlightColor, cursorMagnify, cursorMagnifySize, resolution, frameRate, videoBitrate, smartZoom, smartZoomLevel, smartZoomTransition, smartZoomIdleDelay, smartZoomDamping, captureSize]);
 
   // Reset all settings to factory defaults
   const handleReset = useCallback(() => {
@@ -442,6 +445,7 @@ function WhiteboardApp() {
     setWebcamShape(d.webcamShape);
     setWebcamSize(d.webcamSize);
     setWebcamCornerRadius(d.webcamCornerRadius);
+    setWebcamZoom(d.webcamZoom);
     setVideoDeviceId(d.videoDeviceId);
     setAudioDeviceId(d.audioDeviceId);
     setCursorHighlight(d.cursorHighlight);
@@ -669,6 +673,7 @@ function WhiteboardApp() {
         aspectRatio={wcProps.aspectRatio}
         shapeType={wcProps.shapeType}
         initialWidth={webcamSize}
+        zoom={webcamZoom}
       />
 
       {capture.sources.map((src, i) => (
@@ -714,6 +719,8 @@ function WhiteboardApp() {
           onWebcamSizeChange={setWebcamSize}
           webcamCornerRadius={webcamCornerRadius}
           onWebcamCornerRadiusChange={setWebcamCornerRadius}
+          webcamZoom={webcamZoom}
+          onWebcamZoomChange={setWebcamZoom}
           captureSources={capture.sources}
           captureSize={captureSize}
           onCaptureSizeChange={setCaptureSize}
