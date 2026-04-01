@@ -150,8 +150,22 @@ function WhiteboardApp() {
   const [showMobileMore, setShowMobileMore] = useState(false);
   const mobileMoreRef = useRef<HTMLDivElement>(null);
 
-  // Hide properties panel on mobile when drawing on canvas
+  // Hide properties panel when drawing on canvas (all screen sizes)
   const [propsPanelCollapsed, setPropsPanelCollapsed] = useState(false);
+  const toolbarContainerRef = useRef<HTMLDivElement>(null);
+  const [panelLeft, setPanelLeft] = useState<number | undefined>(undefined);
+
+  // Position panel below active toolbar button
+  useEffect(() => {
+    const container = toolbarContainerRef.current;
+    if (!container) return;
+    const activeBtn = container.querySelector('.tool-btn.active') as HTMLElement;
+    if (!activeBtn) return;
+    const containerRect = container.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    const left = btnRect.left - containerRect.left + btnRect.width / 2 - 120; // 120 = half panel width
+    setPanelLeft(Math.max(8, Math.min(left, containerRect.width - 248)));
+  }, [wbState.activeTool, wbState.selectedElementIds]);
 
   // Close capture menu on outside click/touch
   useEffect(() => {
@@ -510,7 +524,7 @@ function WhiteboardApp() {
 
   return (
     <div className="app">
-      <div className="toolbar-container">
+      <div className="toolbar-container" ref={toolbarContainerRef}>
         <HamburgerMenu
           canvasBg={canvasBg}
           onCanvasBgChange={setCanvasBg}
@@ -718,10 +732,10 @@ function WhiteboardApp() {
             )}
           </div>
         </div>
+        <PropertiesPanel collapsed={propsPanelCollapsed} style={panelLeft !== undefined ? { left: panelLeft } : undefined} />
       </div>
 
       <div className="whiteboard-container">
-        <PropertiesPanel collapsed={propsPanelCollapsed} />
         <Canvas aspectRatio={aspectRatio} canvasBg={canvasBg} laserCanvas={laserCanvasRef} onInteract={() => setPropsPanelCollapsed(true)} />
         <div onClick={() => setPropsPanelCollapsed(false)}>
           <FloatingToolbar favorites={favorites} onContextMenu={handleFloatingContext} />

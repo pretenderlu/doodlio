@@ -190,7 +190,7 @@ function LayerIcon({ direction, size = 18 }: { direction: "front" | "back" | "fo
 const ROUGH_TOOLS = ["line", "rectangle", "ellipse", "arrow", "mindmap"];
 const ROUGH_TYPES = ["line", "rectangle", "ellipse", "arrow", "mindmap-node", "mindmap-edge"];
 
-export function PropertiesPanel({ collapsed }: { collapsed?: boolean }) {
+export function PropertiesPanel({ collapsed, style }: { collapsed?: boolean; style?: React.CSSProperties }) {
   const { state, dispatch, setStyle, setEraserMode, setEraserSize, setLaserDuration, setPenLineStyle, reorderElement, duplicateElement } = useWhiteboard();
   const { activeTool, activeStyle, selectedElementIds, elements, eraserMode, eraserSize, laserDuration } = state;
 
@@ -252,7 +252,7 @@ export function PropertiesPanel({ collapsed }: { collapsed?: boolean }) {
   const showDashAndRoughness = isRoughTool || selectedIsRough || isPenSketchy;
 
   return (
-    <div className={`props-panel${collapsed ? ' props-panel-collapsed' : ''}`}>
+    <div className={`props-panel${collapsed ? ' props-panel-collapsed' : ''}`} style={style}>
       {/* Text border toggle */}
       {isTextContext && (
         <div className="props-section">
