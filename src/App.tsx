@@ -36,6 +36,7 @@ import type { WebcamShape, FrameRate } from "./components/RecordingSetupModal";
 import { detectMindMapFormat, parseMindMapToMarkdown } from "./utils/mindmapParser";
 import { exportSvg } from "./utils/svgExport";
 import { LayerPanel } from "./components/LayerPanel";
+import { WelcomeGuide, useWelcomeGuide } from "./components/WelcomeGuide";
 import "./styles/index.css";
 
 const captureMenuItemStyle: React.CSSProperties = {
@@ -47,6 +48,7 @@ const captureMenuItemStyle: React.CSSProperties = {
 
 function WhiteboardApp() {
   useKeyboard();
+  const { showWelcome, dismissWelcome } = useWelcomeGuide();
 
   // Load saved settings (or defaults) on first render
   const [saved] = useState(loadSettings);
@@ -784,6 +786,8 @@ function WhiteboardApp() {
       {showTeleprompter && (
         <Teleprompter onClose={() => setShowTeleprompter(false)} />
       )}
+
+      {showWelcome && <WelcomeGuide onClose={dismissWelcome} />}
     </div>
   );
 }

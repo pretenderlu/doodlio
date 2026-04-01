@@ -1,0 +1,192 @@
+/* ---- Welcome Guide ---- */
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: welcome-fadein 0.2s ease;
+}
+
+@keyframes welcome-fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.welcome-modal {
+  width: 420px;
+  max-width: 92vw;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: welcome-slidein 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@keyframes welcome-slidein {
+  from { transform: translateY(16px) scale(0.96); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* ---- Icon area ---- */
+.welcome-icon-area {
+  width: 100%;
+  padding: 36px 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.welcome-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  color: #1a1a1a;
+}
+
+/* ---- Content ---- */
+.welcome-content {
+  padding: 24px 32px 16px;
+  text-align: center;
+}
+
+.welcome-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 10px;
+  line-height: 1.3;
+}
+
+.welcome-desc {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ---- Progress dots ---- */
+.welcome-dots {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0 20px;
+}
+
+.welcome-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: #ddd;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s;
+}
+
+.welcome-dot:hover {
+  background: #bbb;
+}
+
+.welcome-dot.active {
+  background: #1a1a1a;
+  width: 20px;
+  border-radius: 4px;
+}
+
+/* ---- Actions ---- */
+.welcome-actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 32px 28px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.welcome-btn-skip {
+  flex: 1;
+  height: 44px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 14px;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.welcome-btn-skip:hover {
+  background: #f5f5f5;
+  color: #555;
+}
+
+.welcome-btn-next {
+  flex: 2;
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s;
+}
+
+.welcome-btn-next:hover {
+  background: #333;
+}
+
+.welcome-btn-secondary {
+  flex: 1;
+  height: 44px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 14px;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.welcome-btn-secondary:hover {
+  background: #f5f5f5;
+}
+
+.welcome-btn-star {
+  flex: 2;
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: background 0.15s;
+  box-sizing: border-box;
+}
+
+.welcome-btn-star:hover {
+  background: #333;
+}
