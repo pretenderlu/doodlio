@@ -519,7 +519,7 @@ function WhiteboardApp() {
           onExportImage={handleExportImage}
           onExportSvg={handleExportSvg}
         />
-        <div className="toolbar-left" onPointerDown={() => setPropsPanelCollapsed(false)}>
+        <div className="toolbar-left" onClick={() => setPropsPanelCollapsed(false)}>
           <Toolbar onContextMenu={handleToolbarContext} />
         </div>
         <div className="toolbar-right">
@@ -723,7 +723,7 @@ function WhiteboardApp() {
       <div className="whiteboard-container">
         <PropertiesPanel collapsed={propsPanelCollapsed} />
         <Canvas aspectRatio={aspectRatio} canvasBg={canvasBg} laserCanvas={laserCanvasRef} onInteract={() => setPropsPanelCollapsed(true)} />
-        <div onPointerDown={() => setPropsPanelCollapsed(false)}>
+        <div onClick={() => setPropsPanelCollapsed(false)}>
           <FloatingToolbar favorites={favorites} onContextMenu={handleFloatingContext} />
         </div>
         {showLayerPanel && <LayerPanel onClose={() => setShowLayerPanel(false)} />}

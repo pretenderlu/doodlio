@@ -212,6 +212,7 @@ export function Canvas({ aspectRatio, canvasBg = "#ffffff", laserCanvas, onInter
             width: "100%",
             height: "100%",
             cursor,
+            touchAction: "none",
           }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
