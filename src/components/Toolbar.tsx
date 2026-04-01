@@ -83,7 +83,7 @@ export function Toolbar({ onContextMenu }: ToolbarProps) {
       <div className="toolbar-group">
         <button
           className="tool-btn"
-          onClick={handleFilePicker}
+          onClick={(e) => { e.stopPropagation(); handleFilePicker(); }}
           onContextMenu={(e) => handleToolContext(e, "image")}
           data-tooltip="插入图片"
         >
@@ -91,7 +91,7 @@ export function Toolbar({ onContextMenu }: ToolbarProps) {
         </button>
         <button
           className="tool-btn"
-          onClick={() => dispatch({ type: "UNDO" })}
+          onClick={(e) => { e.stopPropagation(); dispatch({ type: "UNDO" }); }}
           onContextMenu={(e) => handleToolContext(e, "undo")}
           disabled={state.undoStack.length === 0}
           data-tooltip="撤销 (Ctrl+Z)"
@@ -100,7 +100,7 @@ export function Toolbar({ onContextMenu }: ToolbarProps) {
         </button>
         <button
           className="tool-btn"
-          onClick={() => dispatch({ type: "REDO" })}
+          onClick={(e) => { e.stopPropagation(); dispatch({ type: "REDO" }); }}
           onContextMenu={(e) => handleToolContext(e, "redo")}
           disabled={state.redoStack.length === 0}
           data-tooltip="重做 (Ctrl+Shift+Z)"
@@ -109,7 +109,7 @@ export function Toolbar({ onContextMenu }: ToolbarProps) {
         </button>
         <button
           className="tool-btn"
-          onClick={() => hasVisibleElements && dispatch({ type: "CLEAR_ALL" })}
+          onClick={(e) => { e.stopPropagation(); hasVisibleElements && dispatch({ type: "CLEAR_ALL" }); }}
           onContextMenu={(e) => handleToolContext(e, "clear")}
           disabled={!hasVisibleElements}
           data-tooltip="清除全部"
