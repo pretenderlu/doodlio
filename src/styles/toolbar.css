@@ -56,6 +56,54 @@
   flex-shrink: 0;
 }
 
+/* ---- Mobile: scrollable toolbar ---- */
+@media (max-width: 768px) {
+  .toolbar-container {
+    padding: 0 6px;
+    gap: 4px;
+  }
+
+  .toolbar-left {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .toolbar-left::-webkit-scrollbar {
+    display: none;
+  }
+
+  .toolbar-right {
+    gap: 2px;
+  }
+
+  .tool-btn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  .tool-btn.mini {
+    width: 24px;
+    height: 24px;
+  }
+
+  .shortcut-badge {
+    display: none;
+  }
+
+  .toolbar-divider {
+    margin: 0 3px;
+  }
+
+  .tool-btn[data-tooltip]::after {
+    display: none;
+  }
+}
+
 /* ---- Tool buttons ---- */
 .tool-btn {
   position: relative;
