@@ -142,7 +142,7 @@
 .rsetup-modal {
   display: flex;
   width: min(92vw, 860px);
-  max-height: 92vh;
+  height: min(92vh, 760px);
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 16px 60px rgba(0, 0, 0, 0.22);
@@ -889,7 +889,7 @@
   .rsetup-modal {
     flex-direction: column;
     width: 94vw;
-    max-height: 90vh;
+    height: 90vh;
   }
 
   .rsetup-left {

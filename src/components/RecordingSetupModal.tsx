@@ -948,7 +948,9 @@ export function RecordingSetupModal({
                     </div>
                   ) : (
                     <div style={{ fontSize: 12, color: '#aaa', padding: '6px 0' }}>
-                      暂无活跃采集源。点击上方按钮添加，或使用工具栏㌀采集㌁按钮。
+                      暂无活跃采集源。点击上方按钮添加，或使用工具栏
+                      <svg width={12} height={12} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-1.5px', margin: '0 2px' }}><rect x={2} y={4} width={16} height={11} rx={1.5} /><circle cx={13} cy={9} r={2} /><circle cx={5} cy={9} r={1} /><line x1={7} y1={15} x2={13} y2={15} /><line x1={10} y1={15} x2={10} y2={17} /><line x1={6} y1={17} x2={14} y2={17} /></svg>
+                      采集按钮。
                     </div>
                   )}
 

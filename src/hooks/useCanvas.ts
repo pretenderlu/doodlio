@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { nanoid } from "nanoid";
 import { useWhiteboard } from "./useElements";
 import { renderScene, renderSingleElement } from "../utils/renderer";
@@ -51,6 +51,10 @@ interface MarqueeState {
 
 export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRefs) {
   const { state, dispatch, zoomTo, panBy } = useWhiteboard();
+  // Keep a stable ref to latest state so useCallback closures always read fresh values
+  // without needing state fields in their dependency arrays.
+  const stateRef = useRef(state);
+  useLayoutEffect(() => { stateRef.current = state; });
   const currentElement = useRef<WhiteboardElement | null>(null);
   const isDrawing = useRef(false);
   const dragState = useRef<DragState | null>(null);
@@ -64,7 +68,7 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
   const laserTrail = useRef<Array<[number, number, number]>>([]); // [x, y, timestamp]
   const laserAnimFrame = useRef<number>(0);
   const laserDurationRef = useRef(state.laserDuration);
-  laserDurationRef.current = state.laserDuration;
+  useLayoutEffect(() => { laserDurationRef.current = state.laserDuration; }, [state.laserDuration]);
   // Pan state
   const isPanning = useRef(false);
   const panStart = useRef({ x: 0, y: 0 });
@@ -216,9 +220,9 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
       const rect = canvas.getBoundingClientRect();
       const screenX = e.clientX - rect.left;
       const screenY = e.clientY - rect.top;
-      return screenToWorld(screenX, screenY, state.viewport);
+      return screenToWorld(screenX, screenY, stateRef.current.viewport);
     },
-    [dynamicCanvas, state.viewport]
+    [dynamicCanvas]
   );
 
   /** Get screen-space point (no viewport transform). Used for marquee, laser, etc. */
@@ -233,17 +237,18 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
   );
 
   const getNextZIndex = useCallback((): number => {
-    const maxZ = state.elements.reduce(
+    const maxZ = stateRef.current.elements.reduce(
       (max, el) => (el.isDeleted ? max : Math.max(max, el.zIndex)),
       0
     );
     return maxZ + 1;
-  }, [state.elements]);
+  }, []);
 
   // ---- Pointer handlers ----
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
+      const s = stateRef.current;
       // Palm rejection: ignore touch while stylus is active
       if (e.pointerType === "touch" && activePointerType.current === "pen") {
         return;
@@ -257,7 +262,7 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
 
       const [x, y] = getCanvasPoint(e);
       const [screenX, screenY] = getScreenPoint(e);
-      const tool = state.activeTool;
+      const tool = s.activeTool;
 
       // Pan: Space+click, middle-button, or hand tool
       if (spaceHeld.current || e.button === 1 || tool === "hand") {
@@ -269,12 +274,12 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
 
       if (tool === "select") {
         // Check if clicking a resize handle on a selected element (single selection only)
-        if (state.selectedElementIds.length === 1) {
-          const selEl = state.elements.find(
-            (e) => e.id === state.selectedElementIds[0] && !e.isDeleted
+        if (s.selectedElementIds.length === 1) {
+          const selEl = s.elements.find(
+            (e) => e.id === s.selectedElementIds[0] && !e.isDeleted
           );
           if (selEl) {
-            const handle = hitTestHandle(x, y, selEl, 1 / state.viewport.zoom);
+            const handle = hitTestHandle(x, y, selEl, 1 / s.viewport.zoom);
             if (handle === "rotate" && selEl.type !== "mindmap-node" && selEl.type !== "mindmap-edge" && selEl.type !== "pixel-eraser") {
               // Start rotation drag
               const bounds = getSelectionBounds(selEl);
@@ -316,12 +321,12 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
           }
         }
 
-        const hit = hitTest(x, y, state.elements);
+        const hit = hitTest(x, y, s.elements);
         if (hit) {
           if (e.shiftKey) {
             // Shift+click toggles selection
             dispatch({ type: "TOGGLE_SELECTED", id: hit.id });
-          } else if (state.selectedElementIds.includes(hit.id)) {
+          } else if (s.selectedElementIds.includes(hit.id)) {
             // Clicking already-selected element: start drag of all selected
           } else {
             // Click element without shift: single-select
@@ -330,16 +335,16 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
 
           // Start drag/move for all selected elements
           const selectedIds = e.shiftKey
-            ? (state.selectedElementIds.includes(hit.id)
-              ? state.selectedElementIds.filter((id) => id !== hit.id)
-              : [...state.selectedElementIds, hit.id])
-            : (state.selectedElementIds.includes(hit.id)
-              ? state.selectedElementIds
+            ? (s.selectedElementIds.includes(hit.id)
+              ? s.selectedElementIds.filter((id) => id !== hit.id)
+              : [...s.selectedElementIds, hit.id])
+            : (s.selectedElementIds.includes(hit.id)
+              ? s.selectedElementIds
               : [hit.id]);
 
           const startPositions = new Map<string, { x: number; y: number; w: number; h: number }>();
           for (const id of selectedIds) {
-            const el = state.elements.find((e) => e.id === id && !e.isDeleted);
+            const el = s.elements.find((e) => e.id === id && !e.isDeleted);
             if (el) {
               startPositions.set(id, { x: el.x, y: el.y, w: el.width, h: el.height });
             }
@@ -376,15 +381,15 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
 
       if (tool === "eraser") {
         (e.target as HTMLCanvasElement).setPointerCapture(e.pointerId);
-        if (state.eraserMode === "stroke") {
+        if (s.eraserMode === "stroke") {
           isErasing.current = true;
           erasedIds.current = new Set();
-          const hit = hitTest(x, y, state.elements);
+          const hit = hitTest(x, y, s.elements);
           if (hit) {
             erasedIds.current.add(hit.id);
             dispatch({ type: "DELETE_ELEMENT", id: hit.id });
           }
-        } else if (state.eraserMode === "pixel") {
+        } else if (s.eraserMode === "pixel") {
           isErasing.current = true;
           const el: PixelEraserElement = {
             id: nanoid(),
@@ -394,8 +399,8 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
             width: 0,
             height: 0,
             points: [[x, y]],
-            eraserSize: state.eraserSize,
-            style: { ...state.activeStyle },
+            eraserSize: s.eraserSize,
+            style: { ...s.activeStyle },
             roughSeed: 0,
             isDeleted: false,
             zIndex: getNextZIndex(),
@@ -406,10 +411,10 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
             const sCtx = sCanvas.getContext("2d");
             if (sCtx) {
               sCtx.save();
-              applyViewportTransform(sCtx, state.viewport);
+              applyViewportTransform(sCtx, s.viewport);
               sCtx.globalCompositeOperation = "destination-out";
               sCtx.beginPath();
-              sCtx.arc(x, y, state.eraserSize / 2, 0, Math.PI * 2);
+              sCtx.arc(x, y, s.eraserSize / 2, 0, Math.PI * 2);
               sCtx.fill();
               sCtx.restore();
             }
@@ -448,15 +453,15 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
             height: 0,
             points: [[x, y, e.pressure || 0.5]],
             style: {
-              ...state.activeStyle,
-              strokeWidth: isHighlighter ? Math.max(state.activeStyle.strokeWidth * 4, 16) : state.activeStyle.strokeWidth,
-              opacity: isHighlighter ? 0.35 : state.activeStyle.opacity,
+              ...s.activeStyle,
+              strokeWidth: isHighlighter ? Math.max(s.activeStyle.strokeWidth * 4, 16) : s.activeStyle.strokeWidth,
+              opacity: isHighlighter ? 0.35 : s.activeStyle.opacity,
             },
             roughSeed: seed,
             isDeleted: false,
             zIndex: getNextZIndex(),
             highlighter: isHighlighter,
-            lineStyle: isHighlighter ? undefined : state.penLineStyle,
+            lineStyle: isHighlighter ? undefined : s.penLineStyle,
           };
           currentElement.current = el;
           break;
@@ -473,7 +478,7 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
               [x, y],
               [x, y],
             ],
-            style: { ...state.activeStyle },
+            style: { ...s.activeStyle },
             roughSeed: seed,
             isDeleted: false,
             zIndex: getNextZIndex(),
@@ -489,7 +494,7 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
             y: y,
             width: 0,
             height: 0,
-            style: { ...state.activeStyle },
+            style: { ...s.activeStyle },
             roughSeed: seed,
             isDeleted: false,
             zIndex: getNextZIndex(),
@@ -505,7 +510,7 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
             y: y,
             width: 0,
             height: 0,
-            style: { ...state.activeStyle },
+            style: { ...s.activeStyle },
             roughSeed: seed,
             isDeleted: false,
             zIndex: getNextZIndex(),
@@ -525,7 +530,7 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
               [x, y],
               [x, y],
             ],
-            style: { ...state.activeStyle },
+            style: { ...s.activeStyle },
             roughSeed: seed,
             isDeleted: false,
             zIndex: getNextZIndex(),
@@ -535,11 +540,12 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
         }
       }
     },
-    [state.activeTool, state.activeStyle, state.elements, state.selectedElementIds, state.eraserMode, state.eraserSize, state.viewport, state.penLineStyle, getCanvasPoint, getScreenPoint, getNextZIndex, startLaserLoop, staticCanvas, dispatch]
+    [getCanvasPoint, getScreenPoint, getNextZIndex, startLaserLoop, staticCanvas, dispatch]
   );
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
+      const s = stateRef.current;
       // Palm rejection: ignore other pointers during active drawing
       if (activePointerId.current !== null && e.pointerId !== activePointerId.current) {
         return;
@@ -569,10 +575,10 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
             ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
             // Redraw selection boxes in world space
             ctx.save();
-            applyViewportTransform(ctx, state.viewport);
-            const handleScale = 1 / state.viewport.zoom;
-            for (const selId of state.selectedElementIds) {
-              const el = state.elements.find((e) => e.id === selId && !e.isDeleted);
+            applyViewportTransform(ctx, s.viewport);
+            const handleScale = 1 / s.viewport.zoom;
+            for (const selId of s.selectedElementIds) {
+              const el = s.elements.find((e) => e.id === selId && !e.isDeleted);
               if (el) drawSelectionBox(ctx, el, handleScale);
             }
             ctx.restore();
@@ -591,20 +597,20 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
       }
 
       // Handle eraser drag
-      if (isErasing.current && state.activeTool === "eraser") {
+      if (isErasing.current && s.activeTool === "eraser") {
         const canvas = dynamicCanvas.current;
         if (!canvas) return;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
         const dpr = window.devicePixelRatio || 1;
 
-        if (state.eraserMode === "stroke") {
-          const hit = hitTest(x, y, state.elements);
+        if (s.eraserMode === "stroke") {
+          const hit = hitTest(x, y, s.elements);
           if (hit && !erasedIds.current.has(hit.id)) {
             erasedIds.current.add(hit.id);
             dispatch({ type: "DELETE_ELEMENT", id: hit.id });
           }
-        } else if (state.eraserMode === "pixel" && currentElement.current?.type === "pixel-eraser") {
+        } else if (s.eraserMode === "pixel" && currentElement.current?.type === "pixel-eraser") {
           const el = currentElement.current as PixelEraserElement;
           const prevPoint = el.points[el.points.length - 1];
           el.points.push([x, y]);
@@ -614,7 +620,7 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
             const sCtx = sCanvas.getContext("2d");
             if (sCtx) {
               sCtx.save();
-              applyViewportTransform(sCtx, state.viewport);
+              applyViewportTransform(sCtx, s.viewport);
               sCtx.globalCompositeOperation = "destination-out";
               sCtx.lineCap = "round";
               sCtx.lineJoin = "round";
@@ -634,10 +640,10 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
           const [sx, sy] = eraserAreaStart.current;
           // Area eraser rect drawn in world space
           ctx.save();
-          applyViewportTransform(ctx, state.viewport);
+          applyViewportTransform(ctx, s.viewport);
           ctx.strokeStyle = "#e03131";
-          ctx.lineWidth = 1 / state.viewport.zoom;
-          ctx.setLineDash([6 / state.viewport.zoom, 4 / state.viewport.zoom]);
+          ctx.lineWidth = 1 / s.viewport.zoom;
+          ctx.setLineDash([6 / s.viewport.zoom, 4 / s.viewport.zoom]);
           ctx.fillStyle = "rgba(224, 49, 49, 0.08)";
           ctx.fillRect(sx, sy, x - sx, y - sy);
           ctx.strokeRect(sx, sy, x - sx, y - sy);
@@ -648,14 +654,14 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
       }
 
       // Show pixel eraser cursor circle on hover (screen space)
-      if (state.activeTool === "eraser" && state.eraserMode === "pixel" && !isErasing.current) {
+      if (s.activeTool === "eraser" && s.eraserMode === "pixel" && !isErasing.current) {
         const canvas = dynamicCanvas.current;
         if (canvas) {
           const ctx = canvas.getContext("2d");
           if (ctx) {
             const dpr = window.devicePixelRatio || 1;
             ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-            drawPixelEraserCursor(ctx, screenX, screenY, state.eraserSize);
+            drawPixelEraserCursor(ctx, screenX, screenY, s.eraserSize);
           }
         }
       }
@@ -667,14 +673,14 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
       }
 
       // Handle drag/move/resize for selection
-      if (dragState.current?.isDragging && state.selectedElementIds.length > 0) {
+      if (dragState.current?.isDragging && s.selectedElementIds.length > 0) {
         const ds = dragState.current;
         const dx = x - ds.startX;
         const dy = y - ds.startY;
 
-        if (ds.handle === "rotate" && ds.isRotating && state.selectedElementIds.length === 1) {
+        if (ds.handle === "rotate" && ds.isRotating && s.selectedElementIds.length === 1) {
           // Rotation drag
-          const el = state.elements.find((e) => e.id === state.selectedElementIds[0]);
+          const el = s.elements.find((e) => e.id === s.selectedElementIds[0]);
           if (!el) return;
           const bounds = getSelectionBounds(el);
           const centerX = bounds.x + bounds.w / 2;
@@ -692,9 +698,9 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
             id: el.id,
             updates: { rotation: newRotation } as Partial<WhiteboardElement>,
           });
-        } else if (ds.handle && ds.handle !== "rotate" && state.selectedElementIds.length === 1) {
+        } else if (ds.handle && ds.handle !== "rotate" && s.selectedElementIds.length === 1) {
           // Resize single selected element
-          const el = state.elements.find((e) => e.id === state.selectedElementIds[0]);
+          const el = s.elements.find((e) => e.id === s.selectedElementIds[0]);
           if (!el) return;
 
           let newX = ds.elementStartX;
@@ -744,8 +750,8 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
         } else if (!ds.handle) {
           // Compute snap guides against other (non-selected) elements
           let snapDx = dx, snapDy = dy;
-          const selectedSet = new Set(state.selectedElementIds);
-          const otherElements = state.elements.filter((el) => !el.isDeleted && !selectedSet.has(el.id));
+          const selectedSet = new Set(s.selectedElementIds);
+          const otherElements = s.elements.filter((el) => !el.isDeleted && !selectedSet.has(el.id));
 
           // Calculate drag bounds after tentative move
           let bMinX = Infinity, bMinY = Infinity, bMaxX = -Infinity, bMaxY = -Infinity;
@@ -759,7 +765,7 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
           const snap = computeSnap(
             { minX: bMinX, minY: bMinY, maxX: bMaxX, maxY: bMaxY },
             otherElements,
-            state.viewport.zoom
+            s.viewport.zoom
           );
           snapDx = dx + snap.dx;
           snapDy = dy + snap.dy;
@@ -786,14 +792,14 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
               gCtx.clearRect(0, 0, guideCanvas.width / dpr, guideCanvas.height / dpr);
               // Redraw selection boxes
               gCtx.save();
-              applyViewportTransform(gCtx, state.viewport);
-              const handleScale = 1 / state.viewport.zoom;
-              for (const selId of state.selectedElementIds) {
-                const el = state.elements.find((e) => e.id === selId && !e.isDeleted);
+              applyViewportTransform(gCtx, s.viewport);
+              const handleScale = 1 / s.viewport.zoom;
+              for (const selId of s.selectedElementIds) {
+                const el = s.elements.find((e) => e.id === selId && !e.isDeleted);
                 if (el) drawSelectionBox(gCtx, el, handleScale);
               }
               // Draw snap guide lines
-              drawSnapGuides(gCtx, snap.guides, state.viewport.zoom);
+              drawSnapGuides(gCtx, snap.guides, s.viewport.zoom);
               gCtx.restore();
             }
           }
@@ -855,13 +861,14 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
         }
       }
 
-      renderSingleElement(canvas, el, state.viewport);
+      renderSingleElement(canvas, el, s.viewport);
     },
-    [getCanvasPoint, getScreenPoint, state.selectedElementIds, state.elements, state.activeTool, state.eraserMode, state.eraserSize, state.viewport, dynamicCanvas, staticCanvas, dispatch, panBy]
+    [getCanvasPoint, getScreenPoint, dynamicCanvas, staticCanvas, dispatch, panBy]
   );
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
+      const s = stateRef.current;
       activePointerId.current = null;
       activePointerType.current = null;
       snapGuides.current = [];
@@ -883,12 +890,12 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
         const [wMinX, wMinY] = screenToWorld(
           Math.min(ms.startX, ms.currentX),
           Math.min(ms.startY, ms.currentY),
-          state.viewport
+          s.viewport
         );
         const [wMaxX, wMaxY] = screenToWorld(
           Math.max(ms.startX, ms.currentX),
           Math.max(ms.startY, ms.currentY),
-          state.viewport
+          s.viewport
         );
 
         // Only select if marquee has some size (check in screen space)
@@ -896,7 +903,7 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
         const screenH = Math.abs(ms.currentY - ms.startY);
         if (screenW > 3 || screenH > 3) {
           const selectedIds: string[] = [];
-          for (const el of state.elements) {
+          for (const el of s.elements) {
             if (el.isDeleted) continue;
             const bounds = getElementBounds(el);
             if (
@@ -935,7 +942,7 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
         isErasing.current = false;
         (e.target as HTMLCanvasElement).releasePointerCapture(e.pointerId);
 
-        if (state.eraserMode === "pixel" && currentElement.current?.type === "pixel-eraser") {
+        if (s.eraserMode === "pixel" && currentElement.current?.type === "pixel-eraser") {
           const el = currentElement.current as PixelEraserElement;
           if (el.points.length >= 2) {
             dispatch({ type: "ADD_ELEMENT", element: { ...el, _roughDrawable: undefined } });
@@ -950,7 +957,7 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
               ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
             }
           }
-        } else if (state.eraserMode === "area" && eraserAreaStart.current) {
+        } else if (s.eraserMode === "area" && eraserAreaStart.current) {
           const [x, y] = getCanvasPoint(e);
           const [sx, sy] = eraserAreaStart.current;
           const minX = Math.min(sx, x);
@@ -959,7 +966,7 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
           const maxY = Math.max(sy, y);
 
           const idsToDelete: string[] = [];
-          for (const el of state.elements) {
+          for (const el of s.elements) {
             if (el.isDeleted) continue;
             const bounds = getElementBounds(el);
             if (
@@ -1040,12 +1047,13 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
       dispatch({ type: "ADD_ELEMENT", element: { ...el, _roughDrawable: undefined, _isLiveDrawing: undefined } as any });
       currentElement.current = null;
     },
-    [dynamicCanvas, getCanvasPoint, state.eraserMode, state.elements, state.viewport, dispatch]
+    [dynamicCanvas, getCanvasPoint, dispatch]
   );
 
   const getResizeCursor = useCallback(
     (e: React.PointerEvent): string | null => {
-      if (state.activeTool !== "select" || state.selectedElementIds.length !== 1) return null;
+      const s = stateRef.current;
+      if (s.activeTool !== "select" || s.selectedElementIds.length !== 1) return null;
       if (dragState.current?.isDragging) {
         const h = dragState.current.handle;
         if (h === "nw" || h === "se") return "nwse-resize";
@@ -1057,22 +1065,22 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
       const rect = canvas.getBoundingClientRect();
       const screenX = e.clientX - rect.left;
       const screenY = e.clientY - rect.top;
-      const [wx, wy] = screenToWorld(screenX, screenY, state.viewport);
-      const selEl = state.elements.find(
-        (el) => el.id === state.selectedElementIds[0] && !el.isDeleted
+      const [wx, wy] = screenToWorld(screenX, screenY, s.viewport);
+      const selEl = s.elements.find(
+        (el) => el.id === s.selectedElementIds[0] && !el.isDeleted
       );
       if (!selEl) return null;
-      const handle = hitTestHandle(wx, wy, selEl, 1 / state.viewport.zoom);
+      const handle = hitTestHandle(wx, wy, selEl, 1 / s.viewport.zoom);
       if (handle === "rotate") return "grab";
       if (handle === "nw" || handle === "se") return "nwse-resize";
       if (handle === "ne" || handle === "sw") return "nesw-resize";
       return null;
     },
-    [state.activeTool, state.selectedElementIds, state.elements, state.viewport, dynamicCanvas]
+    [dynamicCanvas]
   );
 
   /** Return isPanning for cursor styling */
-  const getIsPanning = useCallback(() => isPanning.current || spaceHeld.current || state.activeTool === "hand", [state.activeTool]);
+  const getIsPanning = useCallback(() => isPanning.current || spaceHeld.current || stateRef.current.activeTool === "hand", []);
 
   /** Handle wheel zoom */
   const handleWheel = useCallback(
@@ -1085,10 +1093,10 @@ export function useCanvas({ staticCanvas, dynamicCanvas, laserCanvas }: CanvasRe
       const screenY = e.clientY - rect.top;
 
       const zoomFactor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-      const newZoom = state.viewport.zoom * zoomFactor;
+      const newZoom = stateRef.current.viewport.zoom * zoomFactor;
       zoomTo(newZoom, screenX, screenY);
     },
-    [state.viewport.zoom, dynamicCanvas, zoomTo]
+    [dynamicCanvas, zoomTo]
   );
 
   return {

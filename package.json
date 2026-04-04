@@ -1,19 +1,8 @@
 {
   "name": "doodlio",
+  "private": true,
   "version": "1.4.0",
-  "description": "Feature-rich open-source whiteboard with sketchy drawing, mind maps, screen recording & smart zoom",
   "type": "module",
-  "license": "MIT",
-  "keywords": [
-    "whiteboard",
-    "drawing",
-    "sketch",
-    "canvas",
-    "mind-map",
-    "screen-recording",
-    "react",
-    "roughjs"
-  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
