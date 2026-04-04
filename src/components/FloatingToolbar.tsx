@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, memo } from "react";
 import { useWhiteboard } from "../hooks/useElements";
 import { useImageInsert } from "../hooks/useImageInsert";
 import { layoutMindMapTree } from "../utils/mindmapLayout";
@@ -30,7 +30,7 @@ interface FloatingToolbarProps {
   favorites: string[];
 }
 
-export function FloatingToolbar({ onContextMenu, favorites }: FloatingToolbarProps) {
+export const FloatingToolbar = memo(function FloatingToolbar({ onContextMenu, favorites }: FloatingToolbarProps) {
   const { state, dispatch, setTool } = useWhiteboard();
   const { handleFilePicker } = useImageInsert();
 
@@ -158,7 +158,7 @@ export function FloatingToolbar({ onContextMenu, favorites }: FloatingToolbarPro
       ))}
     </div>
   );
-}
+});
 
 // Re-export helpers for use in App.tsx
 export { loadFavorites, saveFavorites, DEFAULT_FAVORITES };

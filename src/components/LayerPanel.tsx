@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import { nanoid } from "nanoid";
 import { useWhiteboard } from "../hooks/useElements";
 import type { Layer, WhiteboardElement } from "../types/elements";
@@ -42,7 +42,7 @@ interface Props {
   onClose: () => void;
 }
 
-export function LayerPanel({ onClose }: Props) {
+export const LayerPanel = memo(function LayerPanel({ onClose }: Props) {
   const { state, dispatch } = useWhiteboard();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -183,4 +183,4 @@ export function LayerPanel({ onClose }: Props) {
       </div>
     </div>
   );
-}
+});

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useWhiteboard } from "../hooks/useElements";
 import { useImageInsert } from "../hooks/useImageInsert";
 import { layoutMindMapTree } from "../utils/mindmapLayout";
@@ -9,7 +9,7 @@ interface ToolbarProps {
   onContextMenu: (e: React.MouseEvent, toolKey: string) => void;
 }
 
-export function Toolbar({ onContextMenu }: ToolbarProps) {
+export const Toolbar = memo(function Toolbar({ onContextMenu }: ToolbarProps) {
   const { state, dispatch, setTool } = useWhiteboard();
   const { handleFilePicker } = useImageInsert();
   const hasVisibleElements = state.elements.some((el) => !el.isDeleted);
@@ -119,4 +119,4 @@ export function Toolbar({ onContextMenu }: ToolbarProps) {
       </div>
     </div>
   );
-}
+});

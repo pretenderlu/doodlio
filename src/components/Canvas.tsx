@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState, useEffect } from "react";
+import { useRef, useCallback, useState, useEffect, memo } from "react";
 import { useCanvas } from "../hooks/useCanvas";
 import { useWhiteboard } from "../hooks/useElements";
 import { useTextEditor } from "../hooks/useTextEditor";
@@ -40,7 +40,7 @@ interface CanvasProps {
   onInteract?: () => void;
 }
 
-export function Canvas({ aspectRatio, canvasBg = "#ffffff", laserCanvas, onInteract }: CanvasProps) {
+export const Canvas = memo(function Canvas({ aspectRatio, canvasBg = "#ffffff", laserCanvas, onInteract }: CanvasProps) {
   const staticCanvas = useRef<HTMLCanvasElement>(null);
   const dynamicCanvas = useRef<HTMLCanvasElement>(null);
   const { state, resetViewport, zoomTo } = useWhiteboard();
@@ -257,4 +257,4 @@ export function Canvas({ aspectRatio, canvasBg = "#ffffff", laserCanvas, onInter
       </div>
     </div>
   );
-}
+});

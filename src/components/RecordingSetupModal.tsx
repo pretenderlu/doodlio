@@ -3,8 +3,19 @@ import type { BackgroundConfig } from "../hooks/useRecording";
 import type { CaptureSourceItem } from "../hooks/useCaptureSource";
 import { useMediaDevices } from "../hooks/useMediaDevices";
 import { generateSquircleSVGPath } from "../utils/squirclePath";
+import {
+  RESOLUTION_PRESETS, FRAME_RATE_PRESETS, BITRATE_LEVELS,
+  SMART_ZOOM_SPEED_PRESETS, DEFAULT_SETTINGS,
+  loadSettings, saveSettings, webcamShapeProps,
+} from "../utils/recordingSettings";
+import type {
+  WebcamShape, FrameRate, RecordingSettings,
+  ResolutionPreset, BitrateLevel, SmartZoomSpeedPreset,
+} from "../utils/recordingSettings";
 
-export type WebcamShape = "circle" | "square" | "rectangle" | "squircle";
+// Re-export for backward compatibility
+export type { WebcamShape, FrameRate, RecordingSettings, ResolutionPreset, BitrateLevel, SmartZoomSpeedPreset };
+export { RESOLUTION_PRESETS, FRAME_RATE_PRESETS, BITRATE_LEVELS, SMART_ZOOM_SPEED_PRESETS, DEFAULT_SETTINGS, loadSettings, saveSettings, webcamShapeProps };
 
 // ---- Aspect ratio presets ----
 const ASPECT_PRESETS = [
@@ -13,38 +24,6 @@ const ASPECT_PRESETS = [
   { label: "3:4",  sub: "小红书",   value: "3 / 4"  },
   { label: "9:16", sub: "抖音",     value: "9 / 16" },
   { label: "1:1",  sub: "正方形",   value: "1 / 1"  },
-];
-
-// ---- Resolution presets ----
-export interface ResolutionPreset {
-  label: string;
-  sub: string;
-  width: number;
-  height: number;
-}
-
-export const RESOLUTION_PRESETS: ResolutionPreset[] = [
-  { label: "720p",  sub: "高清",     width: 1280,  height: 720  },
-  { label: "1080p", sub: "全高清",   width: 1920,  height: 1080 },
-  { label: "2K",    sub: "超清",     width: 2560,  height: 1440 },
-  { label: "4K",    sub: "极致",     width: 3840,  height: 2160 },
-];
-
-// ---- Frame rate presets ----
-export const FRAME_RATE_PRESETS = [24, 30, 60] as const;
-export type FrameRate = typeof FRAME_RATE_PRESETS[number];
-
-// ---- Video bitrate presets ----
-export interface BitrateLevel {
-  label: string;
-  value: number; // bps
-}
-
-export const BITRATE_LEVELS: BitrateLevel[] = [
-  { label: "低",   value: 2_500_000  },
-  { label: "中",   value: 5_000_000  },
-  { label: "高",   value: 8_000_000  },
-  { label: "极高", value: 16_000_000 },
 ];
 
 // ---- Background presets ----
@@ -117,97 +96,6 @@ function parseAspectRatio(value: string): number {
   return parts[0] / parts[1];
 }
 
-/** Derive webcam overlay props from shape + corner radius */
-export function webcamShapeProps(shape: WebcamShape, cornerRadius: number) {
-  return {
-    borderRadius: shape === "circle" ? 50 : shape === "squircle" ? 0 : cornerRadius,
-    aspectRatio: shape === "rectangle" ? 16 / 9 : 1,
-    shapeType: shape,
-  };
-}
-
-// ---- Settings persistence ----
-// ---- Smart Zoom transition speed presets ----
-export interface SmartZoomSpeedPreset {
-  label: string;
-  value: number; // ms
-}
-
-export const SMART_ZOOM_SPEED_PRESETS: SmartZoomSpeedPreset[] = [
-  { label: "快",   value: 300  },
-  { label: "中",   value: 600  },
-  { label: "慢",   value: 1000 },
-];
-
-export interface RecordingSettings {
-  aspectRatio: string;
-  background: BackgroundConfig;
-  canvasBorderRadius: number;
-  canvasPadding: number;
-  webcamShape: WebcamShape;
-  webcamSize: number;
-  webcamCornerRadius: number;
-  webcamZoom: number;            // 1.0 - 3.0, crop/zoom into center of feed
-  videoDeviceId: string;
-  audioDeviceId: string;
-  cursorHighlight: boolean;
-  cursorHighlightColor: string;
-  cursorMagnify: boolean;
-  cursorMagnifySize: number;     // scale factor, e.g. 1.5 = 150%
-  resolution: string; // e.g. "1920x1080"
-  frameRate: FrameRate;
-  videoBitrate: number; // bps
-  // Smart Zoom
-  smartZoom: boolean;
-  smartZoomLevel: number;        // e.g. 1.5
-  smartZoomTransition: number;   // ms
-  smartZoomIdleDelay: number;    // ms
-  smartZoomDamping: number;      // 0.01-0.15, lower = smoother
-  // Capture source
-  captureSize: number;             // overlay width in px
-}
-
-export const DEFAULT_SETTINGS: RecordingSettings = {
-  aspectRatio: "16 / 9",
-  background: { type: "solid", color: "#ffffff" },
-  canvasBorderRadius: 0,
-  canvasPadding: 0,
-  webcamShape: "circle",
-  webcamSize: 200,
-  webcamCornerRadius: 12,
-  webcamZoom: 1.0,
-  videoDeviceId: "",
-  audioDeviceId: "",
-  cursorHighlight: false,
-  cursorHighlightColor: "#e03131",
-  cursorMagnify: false,
-  cursorMagnifySize: 1.5,
-  resolution: "1920x1080",
-  frameRate: 30,
-  videoBitrate: 8_000_000,
-  smartZoom: false,
-  smartZoomLevel: 1.5,
-  smartZoomTransition: 800,
-  smartZoomIdleDelay: 1500,
-  smartZoomDamping: 0.03,
-  captureSize: 400,
-};
-
-const STORAGE_KEY = "whiteboard-recording-settings";
-
-export function loadSettings(): RecordingSettings {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-  } catch (e) {
-    console.warn("Failed to load recording settings:", e);
-  }
-  return { ...DEFAULT_SETTINGS };
-}
-
-export function saveSettings(settings: RecordingSettings) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-}
 
 // ---- Preview ----
 interface PreviewProps {
@@ -357,59 +245,15 @@ const CURSOR_COLORS = ["#e03131", "#f08c00", "#f7c948", "#2f9e44", "#1971c2", "#
 
 // ---- Main modal ----
 interface Props {
+  settings: RecordingSettings;
+  onSettingsChange: <K extends keyof RecordingSettings>(key: K, value: RecordingSettings[K]) => void;
   isWebcamOn: boolean;
   onToggleWebcam: () => void;
-  webcamShape: WebcamShape;
-  onWebcamShapeChange: (s: WebcamShape) => void;
-  webcamSize: number;
-  onWebcamSizeChange: (v: number) => void;
-  webcamCornerRadius: number;
-  onWebcamCornerRadiusChange: (v: number) => void;
-  webcamZoom: number;
-  onWebcamZoomChange: (v: number) => void;
   captureSources: CaptureSourceItem[];
-  captureSize: number;
-  onCaptureSizeChange: (v: number) => void;
   onAddScreenCapture: () => void;
   onAddDeviceCapture: (deviceId: string, label?: string) => void;
   onRemoveCapture: (id: string) => void;
   captureIsFull: boolean;
-  aspectRatio: string;
-  onAspectRatioChange: (v: string) => void;
-  background: BackgroundConfig;
-  onBackgroundChange: (bg: BackgroundConfig) => void;
-  canvasBorderRadius: number;
-  onCanvasBorderRadiusChange: (v: number) => void;
-  canvasPadding: number;
-  onCanvasPaddingChange: (v: number) => void;
-  videoDeviceId: string;
-  onVideoDeviceChange: (id: string) => void;
-  audioDeviceId: string;
-  onAudioDeviceChange: (id: string) => void;
-  cursorHighlight: boolean;
-  onCursorHighlightChange: (v: boolean) => void;
-  cursorHighlightColor: string;
-  onCursorHighlightColorChange: (c: string) => void;
-  cursorMagnify: boolean;
-  onCursorMagnifyChange: (v: boolean) => void;
-  cursorMagnifySize: number;
-  onCursorMagnifySizeChange: (v: number) => void;
-  smartZoom: boolean;
-  onSmartZoomChange: (v: boolean) => void;
-  smartZoomLevel: number;
-  onSmartZoomLevelChange: (v: number) => void;
-  smartZoomTransition: number;
-  onSmartZoomTransitionChange: (v: number) => void;
-  smartZoomIdleDelay: number;
-  onSmartZoomIdleDelayChange: (v: number) => void;
-  smartZoomDamping: number;
-  onSmartZoomDampingChange: (v: number) => void;
-  resolution: string;
-  onResolutionChange: (v: string) => void;
-  frameRate: FrameRate;
-  onFrameRateChange: (v: FrameRate) => void;
-  videoBitrate: number;
-  onVideoBitrateChange: (v: number) => void;
   onSaveDefaults: () => void;
   onReset: () => void;
   onConfirm: () => void;
@@ -489,64 +333,31 @@ const SETTINGS_TABS: { id: SettingsTab; label: string; icon: () => React.ReactNo
 ];
 
 export function RecordingSetupModal({
+  settings,
+  onSettingsChange,
   isWebcamOn,
   onToggleWebcam,
-  webcamShape,
-  onWebcamShapeChange,
-  webcamSize,
-  onWebcamSizeChange,
-  webcamCornerRadius,
-  onWebcamCornerRadiusChange,
-  webcamZoom,
-  onWebcamZoomChange,
   captureSources,
-  captureSize,
-  onCaptureSizeChange,
   onAddScreenCapture,
   onAddDeviceCapture,
   onRemoveCapture,
   captureIsFull,
-  aspectRatio,
-  onAspectRatioChange,
-  background,
-  onBackgroundChange,
-  canvasBorderRadius,
-  onCanvasBorderRadiusChange,
-  canvasPadding,
-  onCanvasPaddingChange,
-  videoDeviceId,
-  onVideoDeviceChange,
-  audioDeviceId,
-  onAudioDeviceChange,
-  cursorHighlight,
-  onCursorHighlightChange,
-  cursorHighlightColor,
-  onCursorHighlightColorChange,
-  cursorMagnify,
-  onCursorMagnifyChange,
-  cursorMagnifySize,
-  onCursorMagnifySizeChange,
-  smartZoom,
-  onSmartZoomChange,
-  smartZoomLevel,
-  onSmartZoomLevelChange,
-  smartZoomTransition,
-  onSmartZoomTransitionChange,
-  smartZoomIdleDelay,
-  onSmartZoomIdleDelayChange,
-  smartZoomDamping,
-  onSmartZoomDampingChange,
-  resolution,
-  onResolutionChange,
-  frameRate,
-  onFrameRateChange,
-  videoBitrate,
-  onVideoBitrateChange,
   onSaveDefaults,
   onReset,
   onConfirm,
   onCancel,
 }: Props) {
+  // Destructure settings for convenience (keeps existing code working)
+  const {
+    webcamShape, webcamSize, webcamCornerRadius, webcamZoom,
+    captureSize, aspectRatio, background, canvasBorderRadius, canvasPadding,
+    videoDeviceId, audioDeviceId, cursorHighlight, cursorHighlightColor,
+    cursorMagnify, cursorMagnifySize, smartZoom, smartZoomLevel,
+    smartZoomTransition, smartZoomIdleDelay, smartZoomDamping,
+    resolution, frameRate, videoBitrate,
+  } = settings;
+  // Shorthand for updating a single setting
+  const set = onSettingsChange;
   const [activeTab, setActiveTab] = useState<SettingsTab>("display");
   const [bgCategory, setBgCategory] = useState<BgCategory>("all");
   const customColorRef = useRef<HTMLInputElement>(null);
@@ -563,7 +374,7 @@ export function RecordingSetupModal({
   const randomBg = () => {
     const pool = filteredPresets.length > 0 ? filteredPresets : BG_PRESETS;
     const pick = pool[Math.floor(Math.random() * pool.length)];
-    onBackgroundChange(pick.bg);
+    set("background", pick.bg);
   };
 
   return (
@@ -633,7 +444,7 @@ export function RecordingSetupModal({
                       <button
                         key={preset.value}
                         className={`rsetup-aspect-card ${aspectRatio === preset.value ? "active" : ""}`}
-                        onClick={() => onAspectRatioChange(preset.value)}
+                        onClick={() => set("aspectRatio",preset.value)}
                       >
                         <span className="rsetup-aspect-ratio">{preset.label}</span>
                         <span className="rsetup-aspect-sub">{preset.sub}</span>
@@ -655,7 +466,7 @@ export function RecordingSetupModal({
                         <button
                           key={key}
                           className={`rsetup-aspect-card ${resolution === key ? "active" : ""}`}
-                          onClick={() => onResolutionChange(key)}
+                          onClick={() => set("resolution",key)}
                         >
                           <span className="rsetup-aspect-ratio">{preset.label}</span>
                           <span className="rsetup-aspect-sub">{preset.sub}</span>
@@ -671,7 +482,7 @@ export function RecordingSetupModal({
                       <button
                         key={fps}
                         className={`rsetup-shape-btn ${frameRate === fps ? "active" : ""}`}
-                        onClick={() => onFrameRateChange(fps)}
+                        onClick={() => set("frameRate",fps)}
                       >
                         {fps} fps
                       </button>
@@ -688,7 +499,7 @@ export function RecordingSetupModal({
                     max={BITRATE_LEVELS.length - 1}
                     step={1}
                     value={bitrateIndex >= 0 ? bitrateIndex : 2}
-                    onChange={(e) => onVideoBitrateChange(BITRATE_LEVELS[Number(e.target.value)].value)}
+                    onChange={(e) => set("videoBitrate",BITRATE_LEVELS[Number(e.target.value)].value)}
                     className="rsetup-slider"
                   />
                   <div className="rsetup-range-labels">
@@ -726,7 +537,7 @@ export function RecordingSetupModal({
                         key={preset.id}
                         className={`rsetup-bg-swatch ${bgMatch(preset.bg, background) ? "active" : ""}`}
                         style={{ background: preset.css }}
-                        onClick={() => onBackgroundChange(preset.bg)}
+                        onClick={() => set("background",preset.bg)}
                       />
                     ))}
                     <button
@@ -739,7 +550,7 @@ export function RecordingSetupModal({
                       type="color"
                       value={customColor}
                       onChange={(e) =>
-                        onBackgroundChange({ type: "solid", color: e.target.value })
+                        set("background",{ type: "solid", color: e.target.value })
                       }
                       style={{ position: "absolute", opacity: 0, pointerEvents: "none", width: 0, height: 0 }}
                     />
@@ -753,7 +564,7 @@ export function RecordingSetupModal({
                   </div>
                   <input
                     type="range" min={0} max={50} value={canvasBorderRadius}
-                    onChange={(e) => onCanvasBorderRadiusChange(Number(e.target.value))}
+                    onChange={(e) => set("canvasBorderRadius",Number(e.target.value))}
                     className="rsetup-slider"
                   />
                   <div className="rsetup-range-labels"><span>直角</span><span>圆角</span></div>
@@ -766,7 +577,7 @@ export function RecordingSetupModal({
                   </div>
                   <input
                     type="range" min={0} max={120} value={canvasPadding}
-                    onChange={(e) => onCanvasPaddingChange(Number(e.target.value))}
+                    onChange={(e) => set("canvasPadding",Number(e.target.value))}
                     className="rsetup-slider"
                   />
                   <div className="rsetup-range-labels"><span>无</span><span>大</span></div>
@@ -795,7 +606,7 @@ export function RecordingSetupModal({
                       </div>
                       <input
                         type="range" min={80} max={400} value={webcamSize}
-                        onChange={(e) => onWebcamSizeChange(Number(e.target.value))}
+                        onChange={(e) => set("webcamSize",Number(e.target.value))}
                         className="rsetup-slider"
                       />
                       <div className="rsetup-range-labels"><span>小</span><span>大</span></div>
@@ -805,7 +616,7 @@ export function RecordingSetupModal({
                       </div>
                       <input
                         type="range" min={1.0} max={3.0} step={0.1} value={webcamZoom}
-                        onChange={(e) => onWebcamZoomChange(Number(e.target.value))}
+                        onChange={(e) => set("webcamZoom",Number(e.target.value))}
                         className="rsetup-slider"
                       />
                       <div className="rsetup-range-labels"><span>原始</span><span>放大裁剪</span></div>
@@ -819,25 +630,25 @@ export function RecordingSetupModal({
                       <div className="rsetup-shape-btns rsetup-shape-btns-4">
                         <button
                           className={`rsetup-shape-btn ${webcamShape === "rectangle" ? "active" : ""}`}
-                          onClick={() => onWebcamShapeChange("rectangle")}
+                          onClick={() => set("webcamShape","rectangle")}
                         >
                           <svg width={14} height={10} viewBox="0 0 16 10" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="14" height="8" rx="1.5" /></svg> 长方形
                         </button>
                         <button
                           className={`rsetup-shape-btn ${webcamShape === "square" ? "active" : ""}`}
-                          onClick={() => onWebcamShapeChange("square")}
+                          onClick={() => set("webcamShape","square")}
                         >
                           <svg width={12} height={12} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="12" height="12" rx="1.5" /></svg> 正方形
                         </button>
                         <button
                           className={`rsetup-shape-btn ${webcamShape === "circle" ? "active" : ""}`}
-                          onClick={() => onWebcamShapeChange("circle")}
+                          onClick={() => set("webcamShape","circle")}
                         >
                           <svg width={12} height={12} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="7" r="6" /></svg> 圆形
                         </button>
                         <button
                           className={`rsetup-shape-btn ${webcamShape === "squircle" ? "active" : ""}`}
-                          onClick={() => onWebcamShapeChange("squircle")}
+                          onClick={() => set("webcamShape","squircle")}
                         >
                           <svg width={12} height={12} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="12" height="12" rx="4" /></svg> 超椭圆
                         </button>
@@ -851,7 +662,7 @@ export function RecordingSetupModal({
                           </div>
                           <input
                             type="range" min={0} max={50} value={webcamCornerRadius}
-                            onChange={(e) => onWebcamCornerRadiusChange(Number(e.target.value))}
+                            onChange={(e) => set("webcamCornerRadius",Number(e.target.value))}
                             className="rsetup-slider"
                           />
                           <div className="rsetup-range-labels"><span>直角</span><span>圆角</span></div>
@@ -865,7 +676,7 @@ export function RecordingSetupModal({
                           <select
                             className="rsetup-device-select"
                             value={videoDeviceId}
-                            onChange={(e) => onVideoDeviceChange(e.target.value)}
+                            onChange={(e) => set("videoDeviceId",e.target.value)}
                           >
                             <option value="">默认</option>
                             {videoDevices.map((d) => (
@@ -882,7 +693,7 @@ export function RecordingSetupModal({
                           <select
                             className="rsetup-device-select"
                             value={audioDeviceId}
-                            onChange={(e) => onAudioDeviceChange(e.target.value)}
+                            onChange={(e) => set("audioDeviceId",e.target.value)}
                           >
                             <option value="">默认</option>
                             {audioDevices.map((d) => (
@@ -961,7 +772,7 @@ export function RecordingSetupModal({
                       </div>
                       <input
                         type="range" min={160} max={800} value={captureSize}
-                        onChange={(e) => onCaptureSizeChange(Number(e.target.value))}
+                        onChange={(e) => set("captureSize",Number(e.target.value))}
                         className="rsetup-slider"
                       />
                       <div className="rsetup-range-labels"><span>小</span><span>大</span></div>
@@ -990,8 +801,8 @@ export function RecordingSetupModal({
                     <label className="toggle-switch">
                       <input type="checkbox" checked={cursorHighlight} onChange={(e) => {
                         const on = e.target.checked;
-                        onCursorHighlightChange(on);
-                        if (on) onCursorMagnifyChange(false);
+                        set("cursorHighlight",on);
+                        if (on) set("cursorMagnify",false);
                       }} />
                       <span className="toggle-slider" />
                     </label>
@@ -1005,7 +816,7 @@ export function RecordingSetupModal({
                             key={c}
                             className={`rsetup-cursor-dot ${cursorHighlightColor === c ? "active" : ""}`}
                             style={{ background: c }}
-                            onClick={() => onCursorHighlightColorChange(c)}
+                            onClick={() => set("cursorHighlightColor",c)}
                           />
                         ))}
                       </div>
@@ -1021,8 +832,8 @@ export function RecordingSetupModal({
                     <label className="toggle-switch">
                       <input type="checkbox" checked={cursorMagnify} onChange={(e) => {
                         const on = e.target.checked;
-                        onCursorMagnifyChange(on);
-                        if (on) onCursorHighlightChange(false);
+                        set("cursorMagnify",on);
+                        if (on) set("cursorHighlight",false);
                       }} />
                       <span className="toggle-slider" />
                     </label>
@@ -1034,7 +845,7 @@ export function RecordingSetupModal({
                       </div>
                       <input
                         type="range" min={1.2} max={3.0} step={0.1} value={cursorMagnifySize}
-                        onChange={(e) => onCursorMagnifySizeChange(Number(e.target.value))}
+                        onChange={(e) => set("cursorMagnifySize",Number(e.target.value))}
                         className="rsetup-slider"
                       />
                       <div className="rsetup-range-labels"><span>微放大</span><span>超大</span></div>
@@ -1048,7 +859,7 @@ export function RecordingSetupModal({
                   <div className="rsetup-toggle-row">
                     <span className="rsetup-toggle-label">录制时自动聚焦到鼠标操作区域</span>
                     <label className="toggle-switch">
-                      <input type="checkbox" checked={smartZoom} onChange={(e) => onSmartZoomChange(e.target.checked)} />
+                      <input type="checkbox" checked={smartZoom} onChange={(e) => set("smartZoom",e.target.checked)} />
                       <span className="toggle-slider" />
                     </label>
                   </div>
@@ -1059,7 +870,7 @@ export function RecordingSetupModal({
                       </div>
                       <input
                         type="range" min={1.2} max={3.0} step={0.1} value={smartZoomLevel}
-                        onChange={(e) => onSmartZoomLevelChange(Number(e.target.value))}
+                        onChange={(e) => set("smartZoomLevel",Number(e.target.value))}
                         className="rsetup-slider"
                       />
                       <div className="rsetup-range-labels"><span>微缩</span><span>特写</span></div>
@@ -1074,7 +885,7 @@ export function RecordingSetupModal({
                           <button
                             key={preset.value}
                             className={`rsetup-shape-btn ${smartZoomTransition === preset.value ? "active" : ""}`}
-                            onClick={() => onSmartZoomTransitionChange(preset.value)}
+                            onClick={() => set("smartZoomTransition",preset.value)}
                           >
                             {preset.label}
                           </button>
@@ -1086,7 +897,7 @@ export function RecordingSetupModal({
                       </div>
                       <input
                         type="range" min={500} max={3000} step={100} value={smartZoomIdleDelay}
-                        onChange={(e) => onSmartZoomIdleDelayChange(Number(e.target.value))}
+                        onChange={(e) => set("smartZoomIdleDelay",Number(e.target.value))}
                         className="rsetup-slider"
                       />
                       <div className="rsetup-range-labels"><span>快速回退</span><span>长时间保持</span></div>
@@ -1098,7 +909,7 @@ export function RecordingSetupModal({
                       </div>
                       <input
                         type="range" min={0.01} max={0.15} step={0.01} value={smartZoomDamping}
-                        onChange={(e) => onSmartZoomDampingChange(Number(e.target.value))}
+                        onChange={(e) => set("smartZoomDamping",Number(e.target.value))}
                         className="rsetup-slider"
                       />
                       <div className="rsetup-range-labels"><span>极柔（几乎不晃）</span><span>灵敏（紧跟鼠标）</span></div>

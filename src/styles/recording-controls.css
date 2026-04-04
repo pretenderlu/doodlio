@@ -1,0 +1,54 @@
+/* ---- Recording Controls (button, indicator, timer) ---- */
+.record-btn {
+  width: auto !important;
+  padding: 0 12px;
+  gap: 6px;
+  font-size: 13px;
+  color: #555;
+}
+
+.record-icon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e03131;
+  display: inline-block;
+}
+
+.recording-active {
+  background: #fff5f5;
+  border-radius: 8px;
+  padding: 4px 10px;
+  gap: 8px;
+}
+
+.recording-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e03131;
+  display: inline-block;
+  animation: pulse 1s infinite;
+}
+
+.recording-time {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e03131;
+  font-variant-numeric: tabular-nums;
+}
+
+.recording-stop {
+  color: #e03131 !important;
+  font-size: 12px !important;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}

@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "jszip": "^3.10.1",
     "marked": "^17.0.5",

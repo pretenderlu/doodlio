@@ -43,18 +43,23 @@ export function layoutMindMapTree(
 
   const positions = new Map<string, { x: number; y: number }>();
 
+  const heightCache = new Map<string, number>();
   function getSubtreeHeight(nodeId: string): number {
+    const cached = heightCache.get(nodeId);
+    if (cached !== undefined) return cached;
     const node = nodeMap.get(nodeId);
     if (!node) return 0;
     const size = estimateNodeSize(node);
     const children = childrenOf.get(nodeId) || [];
-    if (children.length === 0) return size.height;
+    if (children.length === 0) { heightCache.set(nodeId, size.height); return size.height; }
     let totalChildHeight = 0;
     for (const child of children) {
       totalChildHeight += getSubtreeHeight(child.id);
     }
     totalChildHeight += (children.length - 1) * NODE_GAP;
-    return Math.max(size.height, totalChildHeight);
+    const result = Math.max(size.height, totalChildHeight);
+    heightCache.set(nodeId, result);
+    return result;
   }
 
   function layoutNode(nodeId: string, x: number, centerY: number) {
@@ -85,18 +90,23 @@ export function layoutMindMapTree(
 
   if (direction === "down") {
     // Top-to-bottom vertical layout
+    const widthCache = new Map<string, number>();
     function getSubtreeWidth(nodeId: string): number {
+      const cached = widthCache.get(nodeId);
+      if (cached !== undefined) return cached;
       const node = nodeMap.get(nodeId);
       if (!node) return 0;
       const size = estimateNodeSize(node);
       const children = childrenOf.get(nodeId) || [];
-      if (children.length === 0) return size.width;
+      if (children.length === 0) { widthCache.set(nodeId, size.width); return size.width; }
       let totalChildWidth = 0;
       for (const child of children) {
         totalChildWidth += getSubtreeWidth(child.id);
       }
       totalChildWidth += (children.length - 1) * NODE_GAP;
-      return Math.max(size.width, totalChildWidth);
+      const result = Math.max(size.width, totalChildWidth);
+      widthCache.set(nodeId, result);
+      return result;
     }
 
     function layoutNodeDown(nodeId: string, centerX: number, y: number) {

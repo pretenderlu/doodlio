@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useWhiteboard } from "../hooks/useElements";
 import { getMindMapCascadeDeleteIds } from "../utils/mindmapHelpers";
 import { useColorStore } from "../hooks/useColorStore";
@@ -190,7 +191,7 @@ function LayerIcon({ direction, size = 18 }: { direction: "front" | "back" | "fo
 const ROUGH_TOOLS = ["line", "rectangle", "ellipse", "arrow", "mindmap"];
 const ROUGH_TYPES = ["line", "rectangle", "ellipse", "arrow", "mindmap-node", "mindmap-edge"];
 
-export function PropertiesPanel({ collapsed, style }: { collapsed?: boolean; style?: React.CSSProperties }) {
+export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style }: { collapsed?: boolean; style?: React.CSSProperties }) {
   const { state, dispatch, setStyle, setEraserMode, setEraserSize, setLaserDuration, setPenLineStyle, reorderElement, duplicateElement } = useWhiteboard();
   const { activeTool, activeStyle, selectedElementIds, elements, eraserMode, eraserSize, laserDuration } = state;
 
@@ -954,4 +955,4 @@ export function PropertiesPanel({ collapsed, style }: { collapsed?: boolean; sty
       )}
     </div>
   );
-}
+});

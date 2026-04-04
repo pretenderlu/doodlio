@@ -1,4 +1,4 @@
-import { useReducer, useCallback, createContext, useContext } from "react";
+import { useReducer, useCallback, useMemo, createContext, useContext } from "react";
 import { nanoid } from "nanoid";
 import type {
   WhiteboardState,
@@ -544,8 +544,13 @@ export function WhiteboardProvider({
     [dispatch]
   );
 
+  const contextValue = useMemo(
+    () => ({ state, dispatch, setTool, setStyle, setEraserMode, setEraserSize, setLaserDuration, setPenLineStyle, reorderElement, duplicateElement, zoomTo, panBy, resetViewport }),
+    [state, dispatch, setTool, setStyle, setEraserMode, setEraserSize, setLaserDuration, setPenLineStyle, reorderElement, duplicateElement, zoomTo, panBy, resetViewport]
+  );
+
   return (
-    <WhiteboardContext.Provider value={{ state, dispatch, setTool, setStyle, setEraserMode, setEraserSize, setLaserDuration, setPenLineStyle, reorderElement, duplicateElement, zoomTo, panBy, resetViewport }}>
+    <WhiteboardContext.Provider value={contextValue}>
       {children}
     </WhiteboardContext.Provider>
   );
@@ -555,4 +560,23 @@ export function useWhiteboard(): WhiteboardContextValue {
   const ctx = useContext(WhiteboardContext);
   if (!ctx) throw new Error("useWhiteboard must be used within WhiteboardProvider");
   return ctx;
+}
+
+// Selector hooks — convenience accessors for common state slices.
+// Components using these still subscribe to full context, but the narrow
+// return type makes it easier to migrate to split contexts later.
+
+export function useViewport() {
+  const { state } = useWhiteboard();
+  return state.viewport;
+}
+
+export function useActiveTool() {
+  const { state } = useWhiteboard();
+  return state.activeTool;
+}
+
+export function useSelectedIds() {
+  const { state } = useWhiteboard();
+  return state.selectedElementIds;
 }

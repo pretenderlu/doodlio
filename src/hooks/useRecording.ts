@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { drawSquirclePath } from "../utils/squirclePath";
-import html2canvas from "html2canvas";
+// html2canvas is dynamically imported when needed to reduce initial bundle size
 import type { WebcamShape } from "../components/RecordingSetupModal";
 
 // ---- Smart Zoom helpers ----
@@ -258,6 +258,7 @@ export function useRecording() {
         if (mdSnapshotBusy) return;
         mdSnapshotBusy = true;
         try {
+          const { default: html2canvas } = await import("html2canvas");
           const canvas = await html2canvas(el, {
             scale: 2,
             useCORS: true,
