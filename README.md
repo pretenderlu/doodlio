@@ -61,12 +61,20 @@ Doodlio 是纯前端应用，可以一键部署到各大平台。仓库已内置
 
 ### GitHub Pages
 
-1. 在仓库 **Settings → Pages** 中：
-   - **Source** 选择 **GitHub Actions**
-2. 仓库已包含 `.github/workflows/deploy-pages.yml`，push 到 main 分支后会自动构建部署
-3. 部署完成后访问 `https://<username>.github.io/doodlio/`
-
-> 如果使用 GitHub Pages 部署到子路径，需要修改 `vite.config.ts` 中的 `base` 为 `'/doodlio/'`。
+1. 在仓库 **Settings → Pages → Source** 中选择 **GitHub Actions**
+2. 打开 `.github/workflows/deploy-pages.yml`，将触发条件改为 push 自动部署：
+   ```yaml
+   on:
+     push:
+       branches: [main]
+     workflow_dispatch:
+   ```
+   > 默认仅支持手动触发（Actions 标签页 → Run workflow）。添加 `push` 后每次推送到 main 会自动部署。
+3. 修改 `vite.config.ts` 中的 `base` 为你的仓库名：
+   ```ts
+   base: '/doodlio/',  // 改为你的仓库名
+   ```
+4. 部署完成后访问 `https://<username>.github.io/doodlio/`
 
 ### Docker
 
