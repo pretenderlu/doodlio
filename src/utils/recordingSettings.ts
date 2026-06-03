@@ -1,6 +1,13 @@
 import type { BackgroundConfig } from "../hooks/useRecording";
 
 export type WebcamShape = "circle" | "square" | "rectangle" | "squircle";
+export type CursorStyle = "magnified-arrow" | "little-orange-paw";
+
+export interface CursorStylePreset {
+  label: string;
+  sub: string;
+  value: CursorStyle;
+}
 
 export interface ResolutionPreset {
   label: string;
@@ -37,9 +44,14 @@ export interface SmartZoomSpeedPreset {
 }
 
 export const SMART_ZOOM_SPEED_PRESETS: SmartZoomSpeedPreset[] = [
-  { label: "快",   value: 300  },
-  { label: "中",   value: 600  },
-  { label: "慢",   value: 1000 },
+  { label: "快",   value: 400  },
+  { label: "中",   value: 800  },
+  { label: "慢",   value: 1200 },
+];
+
+export const CURSOR_STYLE_PRESETS: CursorStylePreset[] = [
+  { label: "经典箭头", sub: "清晰指向", value: "magnified-arrow" },
+  { label: "小橘子的小爪子", sub: "纪念我的小橘子", value: "little-orange-paw" },
 ];
 
 export interface RecordingSettings {
@@ -56,6 +68,7 @@ export interface RecordingSettings {
   cursorHighlight: boolean;
   cursorHighlightColor: string;
   cursorMagnify: boolean;
+  cursorStyle: CursorStyle;
   cursorMagnifySize: number;
   resolution: string;
   frameRate: FrameRate;
@@ -82,6 +95,7 @@ export const DEFAULT_SETTINGS: RecordingSettings = {
   cursorHighlight: false,
   cursorHighlightColor: "#e03131",
   cursorMagnify: false,
+  cursorStyle: "magnified-arrow",
   cursorMagnifySize: 1.5,
   resolution: "1920x1080",
   frameRate: 30,
@@ -99,7 +113,13 @@ const STORAGE_KEY = "whiteboard-recording-settings";
 export function loadSettings(): RecordingSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.cursorStyle === "glove" || parsed.cursorStyle === "fat-orange-cat") {
+        parsed.cursorStyle = "little-orange-paw";
+      }
+      return { ...DEFAULT_SETTINGS, ...parsed };
+    }
   } catch (e) {
     console.warn("Failed to load recording settings:", e);
   }

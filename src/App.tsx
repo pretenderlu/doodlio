@@ -402,6 +402,7 @@ function WhiteboardApp() {
         cursorHighlight: rs.cursorHighlight,
         cursorHighlightColor: rs.cursorHighlightColor,
         cursorMagnify: rs.cursorMagnify,
+        cursorStyle: rs.cursorStyle,
         cursorMagnifySize: rs.cursorMagnifySize,
         resolution: rs.resolution,
         frameRate: rs.frameRate,

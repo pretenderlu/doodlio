@@ -3,9 +3,10 @@ import type { BackgroundConfig } from "../hooks/useRecording";
 import type { CaptureSourceItem } from "../hooks/useCaptureSource";
 import { useMediaDevices } from "../hooks/useMediaDevices";
 import { generateSquircleSVGPath } from "../utils/squirclePath";
+import littleOrangePawCursorUrl from "../assets/cursors/little-orange-paw-select.png";
 import {
   RESOLUTION_PRESETS, FRAME_RATE_PRESETS, BITRATE_LEVELS,
-  SMART_ZOOM_SPEED_PRESETS, DEFAULT_SETTINGS,
+  SMART_ZOOM_SPEED_PRESETS, CURSOR_STYLE_PRESETS, DEFAULT_SETTINGS,
   loadSettings, saveSettings, webcamShapeProps,
 } from "../utils/recordingSettings";
 import type {
@@ -352,7 +353,7 @@ export function RecordingSetupModal({
     webcamShape, webcamSize, webcamCornerRadius, webcamZoom,
     captureSize, aspectRatio, background, canvasBorderRadius, canvasPadding,
     videoDeviceId, audioDeviceId, cursorHighlight, cursorHighlightColor,
-    cursorMagnify, cursorMagnifySize, smartZoom, smartZoomLevel,
+    cursorMagnify, cursorStyle, cursorMagnifySize, smartZoom, smartZoomLevel,
     smartZoomTransition, smartZoomIdleDelay, smartZoomDamping,
     resolution, frameRate, videoBitrate,
   } = settings;
@@ -365,6 +366,12 @@ export function RecordingSetupModal({
 
   const bitrateIndex = BITRATE_LEVELS.findIndex((b) => b.value === videoBitrate);
   const currentBitrateLabel = bitrateIndex >= 0 ? BITRATE_LEVELS[bitrateIndex].label : "自定义";
+  const currentCursorStyle = CURSOR_STYLE_PRESETS.find((preset) => preset.value === cursorStyle) ?? CURSOR_STYLE_PRESETS[0];
+  const cursorEffectMode = cursorMagnify ? "magnify" : cursorHighlight ? "highlight" : "off";
+  const setCursorEffectMode = (mode: "off" | "highlight" | "magnify") => {
+    set("cursorHighlight", mode === "highlight");
+    set("cursorMagnify", mode === "magnify");
+  };
 
   const filteredPresets = BG_PRESETS.filter((p) => p.cats.includes(bgCategory));
   const isCustom = !BG_PRESETS.some((p) => bgMatch(p.bg, background));
@@ -793,23 +800,36 @@ export function RecordingSetupModal({
             {/* ══ Tab: 效果 (Effects) ══ */}
             {activeTab === "effects" && (
               <>
-                {/* Cursor highlight */}
+                {/* Cursor final render effect */}
                 <div className="rsetup-section">
-                  <div className="rsetup-section-label">鼠标光标效果</div>
-                  <div className="rsetup-toggle-row">
-                    <span className="rsetup-toggle-label">录制时显示光标高亮</span>
-                    <label className="toggle-switch">
-                      <input type="checkbox" checked={cursorHighlight} onChange={(e) => {
-                        const on = e.target.checked;
-                        set("cursorHighlight",on);
-                        if (on) set("cursorMagnify",false);
-                      }} />
-                      <span className="toggle-slider" />
-                    </label>
+                  <div className="rsetup-section-label">鼠标最终渲染效果</div>
+                  <div className="rsetup-effect-mode-grid">
+                    <button
+                      type="button"
+                      className={`rsetup-shape-btn ${cursorEffectMode === "off" ? "active" : ""}`}
+                      onClick={() => setCursorEffectMode("off")}
+                    >
+                      不显示
+                    </button>
+                    <button
+                      type="button"
+                      className={`rsetup-shape-btn ${cursorEffectMode === "highlight" ? "active" : ""}`}
+                      onClick={() => setCursorEffectMode("highlight")}
+                    >
+                      高亮光圈
+                    </button>
+                    <button
+                      type="button"
+                      className={`rsetup-shape-btn ${cursorEffectMode === "magnify" ? "active" : ""}`}
+                      onClick={() => setCursorEffectMode("magnify")}
+                    >
+                      放大指针
+                    </button>
                   </div>
+                  <div className="rsetup-effect-hint">仅影响导出视频中的鼠标呈现，不改变书写时的实际操作指针。</div>
                   {cursorHighlight && (
                     <>
-                      <div className="rsetup-section-label" style={{ marginTop: 10 }}>光标颜色</div>
+                      <div className="rsetup-section-label" style={{ marginTop: 10 }}>高亮颜色</div>
                       <div className="rsetup-cursor-colors">
                         {CURSOR_COLORS.map((c) => (
                           <button
@@ -822,24 +842,32 @@ export function RecordingSetupModal({
                       </div>
                     </>
                   )}
-                </div>
-
-                {/* Cursor magnify */}
-                <div className="rsetup-section">
-                  <div className="rsetup-section-label">放大鼠标</div>
-                  <div className="rsetup-toggle-row">
-                    <span className="rsetup-toggle-label">录制时显示放大版鼠标光标</span>
-                    <label className="toggle-switch">
-                      <input type="checkbox" checked={cursorMagnify} onChange={(e) => {
-                        const on = e.target.checked;
-                        set("cursorMagnify",on);
-                        if (on) set("cursorHighlight",false);
-                      }} />
-                      <span className="toggle-slider" />
-                    </label>
-                  </div>
                   {cursorMagnify && (
                     <>
+                      <div className="rsetup-section-label" style={{ marginTop: 10 }}>光标样式</div>
+                      <div className="rsetup-pack-name">{currentCursorStyle.label} · {currentCursorStyle.sub}</div>
+                      <div className="rsetup-cursor-style-grid">
+                        {CURSOR_STYLE_PRESETS.map((preset) => (
+                          <button
+                            key={preset.value}
+                            type="button"
+                            className={`rsetup-aspect-card rsetup-cursor-style-card ${cursorStyle === preset.value ? "active" : ""}`}
+                            onClick={() => set("cursorStyle", preset.value)}
+                          >
+                            <span className="rsetup-cursor-preview" aria-hidden="true">
+                              {preset.value === "little-orange-paw" ? (
+                                <img src={littleOrangePawCursorUrl} alt="" />
+                              ) : (
+                                <svg className="rsetup-classic-cursor-icon" viewBox="0 0 24 24" role="img" aria-label="经典箭头">
+                                  <path d="M5 3.8v15.4l4.1-4 2.7 6.1 3-1.3-2.8-6 5.7-.3L5 3.8Z" />
+                                </svg>
+                              )}
+                            </span>
+                            <span className="rsetup-aspect-ratio">{preset.label}</span>
+                            <span className="rsetup-aspect-sub">{preset.sub}</span>
+                          </button>
+                        ))}
+                      </div>
                       <div className="rsetup-section-label" style={{ marginTop: 10 }}>
                         放大倍率：<span className="rsetup-value">{cursorMagnifySize.toFixed(1)}x</span>
                       </div>

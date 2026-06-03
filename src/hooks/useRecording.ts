@@ -2,6 +2,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { drawSquirclePath } from "../utils/squirclePath";
 // html2canvas is dynamically imported when needed to reduce initial bundle size
 import type { WebcamShape } from "../components/RecordingSetupModal";
+import type { CursorStyle } from "../utils/recordingSettings";
+import littleOrangePawCursorUrl from "../assets/cursors/little-orange-paw-select.png";
 
 // ---- Smart Zoom helpers ----
 
@@ -55,6 +57,7 @@ interface RecordingStartOptions {
   cursorHighlight?: boolean;
   cursorHighlightColor?: string;
   cursorMagnify?: boolean;
+  cursorStyle?: CursorStyle;
   cursorMagnifySize?: number;   // scale factor, e.g. 1.5
   webcamZoom?: number;          // 1.0-3.0, crop into center of webcam feed
   resolution?: string;       // e.g. "1920x1080"
@@ -66,6 +69,63 @@ interface RecordingStartOptions {
   smartZoomTransition?: number;    // ms, e.g. 800
   smartZoomIdleDelay?: number;     // ms, e.g. 1500
   smartZoomDamping?: number;       // 0.01-0.15, lower = smoother follow
+}
+
+function drawArrowCursor(ctx: CanvasRenderingContext2D, s: number) {
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, 14 * s);
+  ctx.lineTo(3.8 * s, 10.8 * s);
+  ctx.lineTo(7.2 * s, 17.2 * s);
+  ctx.lineTo(9.6 * s, 16 * s);
+  ctx.lineTo(6.2 * s, 9.6 * s);
+  ctx.lineTo(11 * s, 9 * s);
+  ctx.closePath();
+  ctx.fillStyle = "#fff";
+  ctx.fill();
+  ctx.strokeStyle = "#222";
+  ctx.lineWidth = 1.2 * s;
+  ctx.lineJoin = "round";
+  ctx.stroke();
+}
+
+function drawTouchCursor(ctx: CanvasRenderingContext2D, s: number) {
+  ctx.beginPath();
+  ctx.moveTo(0, -6 * s);
+  ctx.bezierCurveTo(-3 * s, -6 * s, -4.5 * s, -4 * s, -4.5 * s, -1 * s);
+  ctx.lineTo(-4.5 * s, 8 * s);
+  ctx.bezierCurveTo(-4.5 * s, 10 * s, -3 * s, 11 * s, 0, 11 * s);
+  ctx.bezierCurveTo(3 * s, 11 * s, 4.5 * s, 10 * s, 4.5 * s, 8 * s);
+  ctx.lineTo(4.5 * s, -1 * s);
+  ctx.bezierCurveTo(4.5 * s, -4 * s, 3 * s, -6 * s, 0, -6 * s);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(220, 220, 220, 0.85)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(160, 160, 160, 0.9)";
+  ctx.lineWidth = 1.2 * s;
+  ctx.lineJoin = "round";
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.ellipse(0, -3 * s, 2.5 * s, 1.8 * s, 0, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+  ctx.fill();
+}
+
+const littleOrangePawCursor = new Image();
+littleOrangePawCursor.src = littleOrangePawCursorUrl;
+
+function drawLittleOrangePawCursor(ctx: CanvasRenderingContext2D, s: number) {
+  if (!littleOrangePawCursor.complete) {
+    drawArrowCursor(ctx, s);
+    return;
+  }
+
+  const width = 46 * s;
+  const height = width * (littleOrangePawCursor.naturalHeight / littleOrangePawCursor.naturalWidth);
+  const hotspotX = width * 0.25;
+  const hotspotY = height * 0.11;
+  ctx.drawImage(littleOrangePawCursor, -hotspotX, -hotspotY, width, height);
 }
 
 function applyBackground(
@@ -121,7 +181,7 @@ export function useRecording() {
         webcamShapeType = "circle", getCaptureVideos, getCaptureStreams,
         background, canvasPadding = 0, canvasBorderRadius = 0,
         audioDeviceId, cursorHighlight = false, cursorHighlightColor = "#e03131",
-        cursorMagnify = false, cursorMagnifySize = 1.5,
+        cursorMagnify = false, cursorStyle = "magnified-arrow", cursorMagnifySize = 1.5,
         webcamZoom = 1.0,
         resolution = "1920x1080", frameRate = 30, videoBitrate = 8_000_000,
         smartZoom = false, smartZoomLevel = 1.5,
@@ -423,65 +483,6 @@ export function useRecording() {
           compCtx.beginPath();
           compCtx.arc(cx, cy, 4 * resScale * dpr, 0, Math.PI * 2);
           compCtx.fill();
-          compCtx.restore();
-        }
-
-        // 3a) Magnified cursor — draw an enlarged pointer
-        if (cursorMagnify && cursorPosRef.current) {
-          const curX = cursorPosRef.current.x;
-          const curY = cursorPosRef.current.y;
-          const canvasScale = padPx > 0 ? insetW / W : 1;
-          const cx = insetX + curX * resScale * canvasScale;
-          const cy = insetY + curY * resScale * canvasScale;
-          const s = cursorMagnifySize * resScale * dpr;
-          compCtx.save();
-          compCtx.translate(cx, cy);
-
-          if (isTouchDeviceRef.current) {
-            // Touch device: draw a finger/tap icon
-            compCtx.beginPath();
-            // Fingertip (round top)
-            compCtx.moveTo(0, -6 * s);
-            compCtx.bezierCurveTo(-3 * s, -6 * s, -4.5 * s, -4 * s, -4.5 * s, -1 * s);
-            // Left side of finger
-            compCtx.lineTo(-4.5 * s, 8 * s);
-            // Bottom (rounded)
-            compCtx.bezierCurveTo(-4.5 * s, 10 * s, -3 * s, 11 * s, 0, 11 * s);
-            compCtx.bezierCurveTo(3 * s, 11 * s, 4.5 * s, 10 * s, 4.5 * s, 8 * s);
-            // Right side of finger
-            compCtx.lineTo(4.5 * s, -1 * s);
-            compCtx.bezierCurveTo(4.5 * s, -4 * s, 3 * s, -6 * s, 0, -6 * s);
-            compCtx.closePath();
-            compCtx.fillStyle = "rgba(220, 220, 220, 0.85)";
-            compCtx.fill();
-            compCtx.strokeStyle = "rgba(160, 160, 160, 0.9)";
-            compCtx.lineWidth = 1.2 * s;
-            compCtx.lineJoin = "round";
-            compCtx.stroke();
-            // Fingernail highlight
-            compCtx.beginPath();
-            compCtx.ellipse(0, -3 * s, 2.5 * s, 1.8 * s, 0, 0, Math.PI * 2);
-            compCtx.fillStyle = "rgba(255, 255, 255, 0.6)";
-            compCtx.fill();
-          } else {
-            // Desktop: arrow pointer shape (standard cursor), scaled
-            compCtx.beginPath();
-            compCtx.moveTo(0, 0);
-            compCtx.lineTo(0, 14 * s);
-            compCtx.lineTo(3.8 * s, 10.8 * s);
-            compCtx.lineTo(7.2 * s, 17.2 * s);
-            compCtx.lineTo(9.6 * s, 16 * s);
-            compCtx.lineTo(6.2 * s, 9.6 * s);
-            compCtx.lineTo(11 * s, 9 * s);
-            compCtx.closePath();
-            compCtx.fillStyle = "#fff";
-            compCtx.fill();
-            compCtx.strokeStyle = "#222";
-            compCtx.lineWidth = 1.2 * s;
-            compCtx.lineJoin = "round";
-            compCtx.stroke();
-          }
-
           compCtx.restore();
         }
 
@@ -806,6 +807,40 @@ export function useRecording() {
             offCtx.fillRect(dx, dy, dw, dh * 0.35);
             offCtx.restore();
           }
+        }
+
+        // 6) Draw cursor last so it always stays above strokes, captures, zoom, and webcam.
+        if (cursorMagnify && cursorPosRef.current) {
+          const curX = cursorPosRef.current.x;
+          const curY = cursorPosRef.current.y;
+          const canvasScale = padPx > 0 ? insetW / W : 1;
+          let cx = insetX + curX * resScale * canvasScale;
+          let cy = insetY + curY * resScale * canvasScale;
+
+          if (smartZoom && cam && camZoom > 1.001) {
+            const cropW = W / cam.zoom;
+            const cropH = H / cam.zoom;
+            let cropX = cam.centerX * W - cropW / 2;
+            let cropY = cam.centerY * H - cropH / 2;
+            cropX = Math.max(0, Math.min(cropX, W - cropW));
+            cropY = Math.max(0, Math.min(cropY, H - cropH));
+            cx = (cx - cropX) * (W / cropW);
+            cy = (cy - cropY) * (H / cropH);
+          }
+
+          const s = cursorMagnifySize * resScale * dpr;
+          offCtx.save();
+          offCtx.translate(cx, cy);
+
+          if (isTouchDeviceRef.current) {
+            drawTouchCursor(offCtx, s);
+          } else if (cursorStyle === "little-orange-paw") {
+            drawLittleOrangePawCursor(offCtx, s);
+          } else {
+            drawArrowCursor(offCtx, s);
+          }
+
+          offCtx.restore();
         }
 
         animFrameRef.current = requestAnimationFrame(compositeFrame);
