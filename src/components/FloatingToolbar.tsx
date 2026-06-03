@@ -2,8 +2,9 @@ import { useState, useRef, useCallback, memo } from "react";
 import { useWhiteboard } from "../hooks/useElements";
 import { useImageInsert } from "../hooks/useImageInsert";
 import { layoutMindMapTree } from "../utils/mindmapLayout";
-import { ALL_FAVORITABLE, renderToolIcon } from "../constants/tools";
+import { ALL_FAVORITABLE, renderToolIcon, toolLabelKey } from "../constants/tools";
 import type { ToolType } from "../types/elements";
+import { useI18n } from "../i18n";
 
 const STORAGE_KEY = "floating-tools";
 const DEFAULT_FAVORITES = ["pen", "eraser", "select", "undo", "redo"];
@@ -31,6 +32,7 @@ interface FloatingToolbarProps {
 }
 
 export const FloatingToolbar = memo(function FloatingToolbar({ onContextMenu, favorites }: FloatingToolbarProps) {
+  const { t } = useI18n();
   const { state, dispatch, setTool } = useWhiteboard();
   const { handleFilePicker } = useImageInsert();
 
@@ -133,7 +135,7 @@ export const FloatingToolbar = memo(function FloatingToolbar({ onContextMenu, fa
         onPointerDown={handleDragStart}
         onPointerMove={handleDragMove}
         onPointerUp={handleDragEnd}
-        title="拖拽移动"
+        title={t("toolbar.drag")}
       >
         ⠿
       </div>
@@ -148,7 +150,7 @@ export const FloatingToolbar = memo(function FloatingToolbar({ onContextMenu, fa
             onContextMenu(e, def.key);
           }}
           disabled={isDisabled(def.key)}
-          title={`${def.label}${def.shortcut ? ` (${def.shortcut})` : ""}`}
+          title={`${t(toolLabelKey(def.key))}${def.shortcut ? ` (${def.shortcut})` : ""}`}
         >
           {renderToolIcon(def.icon, "ft-icon")}
           {def.shortcut && def.shortcut.length <= 2 && (

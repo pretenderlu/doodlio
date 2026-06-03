@@ -2,6 +2,7 @@ import { useState, useCallback, memo } from "react";
 import { nanoid } from "nanoid";
 import { useWhiteboard } from "../hooks/useElements";
 import type { Layer, WhiteboardElement } from "../types/elements";
+import { useI18n } from "../i18n";
 import "../styles/layer-panel.css";
 
 const S = 14;
@@ -43,6 +44,7 @@ interface Props {
 }
 
 export const LayerPanel = memo(function LayerPanel({ onClose }: Props) {
+  const { t } = useI18n();
   const { state, dispatch } = useWhiteboard();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -60,13 +62,13 @@ export const LayerPanel = memo(function LayerPanel({ onClose }: Props) {
     const maxOrder = state.layers.reduce((m, l) => Math.max(m, l.order), 0);
     const newLayer: Layer = {
       id: nanoid(),
-      name: `图层 ${state.layers.length + 1}`,
+      name: t("layer.new", { index: state.layers.length + 1 }),
       visible: true,
       locked: false,
       order: maxOrder + 1,
     };
     dispatch({ type: "ADD_LAYER", layer: newLayer });
-  }, [state.layers, dispatch]);
+  }, [state.layers, dispatch, t]);
 
   const deleteLayer = useCallback((layerId: string) => {
     if (state.layers.length <= 1) return;
@@ -107,9 +109,9 @@ export const LayerPanel = memo(function LayerPanel({ onClose }: Props) {
   return (
     <div className="layer-panel">
       <div className="layer-panel-header">
-        <span className="layer-panel-title">图层</span>
+        <span className="layer-panel-title">{t("app.layers")}</span>
         <div className="layer-panel-header-actions">
-          <button className="layer-panel-add" onClick={addLayer} title="新建图层">+</button>
+          <button className="layer-panel-add" onClick={addLayer} title={t("layer.newLayer")}>+</button>
           <button className="layer-panel-close" onClick={onClose}>✕</button>
         </div>
       </div>
@@ -148,32 +150,32 @@ export const LayerPanel = memo(function LayerPanel({ onClose }: Props) {
                 <button
                   className={`layer-btn ${!layer.visible ? "active" : ""}`}
                   onClick={(e) => { e.stopPropagation(); toggleVisibility(layer); }}
-                  title={layer.visible ? "隐藏" : "显示"}
+                  title={layer.visible ? t("layer.hide") : t("layer.show")}
                 >
                   {layer.visible ? <IconEyeOpen /> : <IconEyeClosed />}
                 </button>
                 <button
                   className={`layer-btn ${layer.locked ? "active" : ""}`}
                   onClick={(e) => { e.stopPropagation(); toggleLock(layer); }}
-                  title={layer.locked ? "解锁" : "锁定"}
+                  title={layer.locked ? t("layer.unlock") : t("layer.lock")}
                 >
                   {layer.locked ? <IconLocked /> : <IconUnlocked />}
                 </button>
                 <button
                   className="layer-btn"
                   onClick={(e) => { e.stopPropagation(); dispatch({ type: "REORDER_LAYER", layerId: layer.id, direction: "up" }); }}
-                  title="上移"
+                  title={t("layer.moveUp")}
                 >↑</button>
                 <button
                   className="layer-btn"
                   onClick={(e) => { e.stopPropagation(); dispatch({ type: "REORDER_LAYER", layerId: layer.id, direction: "down" }); }}
-                  title="下移"
+                  title={t("layer.moveDown")}
                 >↓</button>
                 {state.layers.length > 1 && (
                   <button
                     className="layer-btn layer-btn-delete"
                     onClick={(e) => { e.stopPropagation(); deleteLayer(layer.id); }}
-                    title="删除图层"
+                    title={t("layer.delete")}
                   >✕</button>
                 )}
               </div>

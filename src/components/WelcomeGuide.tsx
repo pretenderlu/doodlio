@@ -1,4 +1,6 @@
 import { useState, useCallback } from "react";
+import { useI18n } from "../i18n";
+import type { TranslationKey } from "../i18n";
 
 const STORAGE_KEY = "doodlio-welcome-seen";
 
@@ -109,6 +111,7 @@ interface Props {
 }
 
 export function WelcomeGuide({ onClose }: Props) {
+  const { t } = useI18n();
   const [step, setStep] = useState(0);
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
@@ -123,8 +126,8 @@ export function WelcomeGuide({ onClose }: Props) {
 
         {/* Content */}
         <div className="welcome-content">
-          <h2 className="welcome-title">{current.title}</h2>
-          <p className="welcome-desc">{current.desc}</p>
+          <h2 className="welcome-title">{t(`welcome.title.${step}` as TranslationKey)}</h2>
+          <p className="welcome-desc">{t(`welcome.desc.${step}` as TranslationKey)}</p>
         </div>
 
         {/* Progress dots */}
@@ -143,7 +146,7 @@ export function WelcomeGuide({ onClose }: Props) {
           {isLast ? (
             <>
               <button className="welcome-btn-secondary" onClick={onClose}>
-                开始使用
+                {t("welcome.start")}
               </button>
               <a
                 className="welcome-btn-star"
@@ -161,10 +164,10 @@ export function WelcomeGuide({ onClose }: Props) {
           ) : (
             <>
               <button className="welcome-btn-skip" onClick={onClose}>
-                跳过
+                {t("welcome.skip")}
               </button>
               <button className="welcome-btn-next" onClick={() => setStep(step + 1)}>
-                下一步
+                {t("welcome.next")}
                 <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M7 4l6 6-6 6" />
                 </svg>

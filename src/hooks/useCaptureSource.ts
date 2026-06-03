@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { translateNow } from "../i18n";
 
 export type CaptureMode = "screen" | "device";
 
@@ -54,7 +55,7 @@ export function useCaptureSources() {
       _sourceCounter++;
       const id = crypto.randomUUID?.() ?? `cap-${Date.now()}-${_sourceCounter}`;
       const trackLabel = stream.getVideoTracks()[0]?.label ?? "";
-      const label = trackLabel || `屏幕 ${_sourceCounter}`;
+      const label = trackLabel || translateNow("capture.screenLabel", { index: _sourceCounter });
 
       const item: CaptureSourceItem = { id, type: "screen", label, stream };
 
@@ -87,7 +88,7 @@ export function useCaptureSources() {
 
       _sourceCounter++;
       const id = crypto.randomUUID?.() ?? `cap-${Date.now()}-${_sourceCounter}`;
-      const label = deviceLabel || stream.getVideoTracks()[0]?.label || `设备 ${_sourceCounter}`;
+      const label = deviceLabel || stream.getVideoTracks()[0]?.label || translateNow("capture.deviceLabel", { index: _sourceCounter });
 
       const item: CaptureSourceItem = { id, type: "device", deviceId, label, stream };
 

@@ -6,6 +6,7 @@ import { getAutoColor } from "../utils/mindmapRenderer";
 import { estimateNodeSize, getNodeDepth } from "../utils/mindmapHelpers";
 import { worldToScreen } from "../utils/coordinates";
 import { DEFAULT_STYLE } from "../types/elements";
+import { translateNow } from "../i18n";
 import type {
   MindMapNodeElement,
   MindMapEdgeElement,
@@ -123,7 +124,7 @@ export function useMindMap(
 
   const commitEdit = useCallback(() => {
     if (!editingNodeId) return;
-    const text = editText.trim() || "新节点";
+    const text = editText.trim() || translateNow("mindmap.newNode");
     dispatch({
       type: "UPDATE_ELEMENT",
       id: editingNodeId,
@@ -413,7 +414,7 @@ export function useMindMap(
               setEditText("");
             }
           }}
-          placeholder="输入节点内容..."
+          placeholder={translateNow("mindmap.nodePlaceholder")}
           style={{
             padding: "6px 12px",
             fontSize: DEFAULT_FONT_SIZE,

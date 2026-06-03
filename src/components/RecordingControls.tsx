@@ -1,4 +1,5 @@
 import { renderToolIcon } from "../constants/tools";
+import { useI18n } from "../i18n";
 
 interface RecordingControlsProps {
   isRecording: boolean;
@@ -19,12 +20,13 @@ export function RecordingControls({
   onStart,
   onStop,
 }: RecordingControlsProps) {
+  const { t } = useI18n();
   if (isRecording) {
     return (
       <div className="toolbar-group recording-active">
         <span className="recording-dot" />
         <span className="recording-time">{formatDuration(duration)}</span>
-        <button className="tool-btn recording-stop" onClick={onStop} title="停止录制">
+        <button className="tool-btn recording-stop" onClick={onStop} title={t("app.stopRecording")}>
           {renderToolIcon("record-stop", "tool-icon")}
         </button>
       </div>
@@ -32,9 +34,9 @@ export function RecordingControls({
   }
 
   return (
-    <button className="tool-btn record-btn" onClick={onStart} title="开始录制">
+    <button className="tool-btn record-btn" onClick={onStart} title={t("app.startRecording")}>
       <span className="record-icon" />
-      录制
+      {t("app.startRecording")}
     </button>
   );
 }

@@ -2,14 +2,16 @@ import { useState, memo } from "react";
 import { useWhiteboard } from "../hooks/useElements";
 import { useImageInsert } from "../hooks/useImageInsert";
 import { layoutMindMapTree } from "../utils/mindmapLayout";
-import { TOOLS, renderToolIcon } from "../constants/tools";
+import { TOOLS, renderToolIcon, toolLabelKey } from "../constants/tools";
 import type { ToolType, MindMapLayoutDirection } from "../types/elements";
+import { useI18n } from "../i18n";
 
 interface ToolbarProps {
   onContextMenu: (e: React.MouseEvent, toolKey: string) => void;
 }
 
 export const Toolbar = memo(function Toolbar({ onContextMenu }: ToolbarProps) {
+  const { t } = useI18n();
   const { state, dispatch, setTool } = useWhiteboard();
   const { handleFilePicker } = useImageInsert();
   const hasVisibleElements = state.elements.some((el) => !el.isDeleted);
@@ -30,7 +32,7 @@ export const Toolbar = memo(function Toolbar({ onContextMenu }: ToolbarProps) {
             className={`tool-btn ${state.activeTool === tool.key ? "active" : ""}`}
             onClick={() => setTool(tool.key as ToolType)}
             onContextMenu={(e) => handleToolContext(e, tool.key)}
-            data-tooltip={`${tool.label}${tool.shortcut ? ` (${tool.shortcut})` : ""}`}
+            data-tooltip={`${t(toolLabelKey(tool.key))}${tool.shortcut ? ` (${tool.shortcut})` : ""}`}
           >
             {renderToolIcon(tool.icon, "tool-icon")}
             {tool.shortcut && tool.shortcut.length <= 2 && (
@@ -48,17 +50,17 @@ export const Toolbar = memo(function Toolbar({ onContextMenu }: ToolbarProps) {
             <button
               className={`tool-btn mini ${layoutDirection === "right" ? "active" : ""}`}
               onClick={(e) => { e.stopPropagation(); setLayoutDirection("right"); }}
-              data-tooltip="水平布局"
+              data-tooltip={t("toolbar.layout.horizontal")}
             >→</button>
             <button
               className={`tool-btn mini ${layoutDirection === "down" ? "active" : ""}`}
               onClick={(e) => { e.stopPropagation(); setLayoutDirection("down"); }}
-              data-tooltip="垂直布局"
+              data-tooltip={t("toolbar.layout.vertical")}
             >↓</button>
             <button
               className={`tool-btn mini ${layoutDirection === "radial" ? "active" : ""}`}
               onClick={(e) => { e.stopPropagation(); setLayoutDirection("radial"); }}
-              data-tooltip="径向布局"
+              data-tooltip={t("toolbar.layout.radial")}
             >◎</button>
             <button
               className="tool-btn"
@@ -69,7 +71,7 @@ export const Toolbar = memo(function Toolbar({ onContextMenu }: ToolbarProps) {
                   dispatch({ type: "LAYOUT_MINDMAP", positions });
                 }
               }}
-              data-tooltip="整理布局"
+              data-tooltip={t("tool.layout")}
             >
               {renderToolIcon("layout", "tool-icon")}
             </button>
@@ -85,7 +87,7 @@ export const Toolbar = memo(function Toolbar({ onContextMenu }: ToolbarProps) {
           className="tool-btn"
           onClick={(e) => { e.stopPropagation(); handleFilePicker(); }}
           onContextMenu={(e) => handleToolContext(e, "image")}
-          data-tooltip="插入图片"
+          data-tooltip={t("tool.image")}
         >
           {renderToolIcon("image", "tool-icon")}
         </button>
@@ -94,7 +96,7 @@ export const Toolbar = memo(function Toolbar({ onContextMenu }: ToolbarProps) {
           onClick={(e) => { e.stopPropagation(); dispatch({ type: "UNDO" }); }}
           onContextMenu={(e) => handleToolContext(e, "undo")}
           disabled={state.undoStack.length === 0}
-          data-tooltip="撤销 (Ctrl+Z)"
+          data-tooltip={`${t("tool.undo")} (Ctrl+Z)`}
         >
           {renderToolIcon("undo", "tool-icon")}
         </button>
@@ -103,7 +105,7 @@ export const Toolbar = memo(function Toolbar({ onContextMenu }: ToolbarProps) {
           onClick={(e) => { e.stopPropagation(); dispatch({ type: "REDO" }); }}
           onContextMenu={(e) => handleToolContext(e, "redo")}
           disabled={state.redoStack.length === 0}
-          data-tooltip="重做 (Ctrl+Shift+Z)"
+          data-tooltip={`${t("tool.redo")} (Ctrl+Shift+Z)`}
         >
           {renderToolIcon("redo", "tool-icon")}
         </button>
@@ -112,7 +114,7 @@ export const Toolbar = memo(function Toolbar({ onContextMenu }: ToolbarProps) {
           onClick={(e) => { e.stopPropagation(); hasVisibleElements && dispatch({ type: "CLEAR_ALL" }); }}
           onContextMenu={(e) => handleToolContext(e, "clear")}
           disabled={!hasVisibleElements}
-          data-tooltip="清除全部"
+          data-tooltip={t("tool.clear")}
         >
           {renderToolIcon("clear", "tool-icon")}
         </button>

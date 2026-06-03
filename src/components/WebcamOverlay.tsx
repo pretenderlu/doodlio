@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useId } from "react";
 import { generateSquircleSVGPath } from "../utils/squirclePath";
 import type { WebcamShape } from "./RecordingSetupModal";
+import { useI18n } from "../i18n";
 
 interface Position {
   x: number;
@@ -30,6 +31,7 @@ export function WebcamOverlay({
   initialWidth = 200,
   zoom = 1.0,
 }: WebcamOverlayProps) {
+  const { t } = useI18n();
   const [pos, setPos] = useState<Position>({ x: -1, y: -1 });
   const [width, setWidth] = useState(initialWidth);
 
@@ -236,7 +238,7 @@ export function WebcamOverlay({
           boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
           zIndex: 1,
         }}
-        title="关闭摄像头"
+        title={t("common.close")}
       >
         ✕
       </button>

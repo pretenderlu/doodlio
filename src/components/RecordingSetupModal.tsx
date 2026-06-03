@@ -13,6 +13,8 @@ import type {
   WebcamShape, FrameRate, RecordingSettings,
   ResolutionPreset, BitrateLevel, SmartZoomSpeedPreset,
 } from "../utils/recordingSettings";
+import { useI18n } from "../i18n";
+import type { TranslationKey } from "../i18n";
 
 // Re-export for backward compatibility
 export type { WebcamShape, FrameRate, RecordingSettings, ResolutionPreset, BitrateLevel, SmartZoomSpeedPreset };
@@ -120,6 +122,7 @@ function RecordingPreview({
   webcamCornerRadius,
   captureCount,
 }: PreviewProps) {
+  const { t } = useI18n();
   const ar = parseAspectRatio(aspectRatio);
   const maxW = 200;
   const maxH = 180;
@@ -157,7 +160,7 @@ function RecordingPreview({
 
   return (
     <div className="rsetup-preview-wrap">
-      <div className="rsetup-preview-label">预览</div>
+      <div className="rsetup-preview-label">{t("recording.preview")}</div>
       <div
         className="rsetup-preview-frame"
         style={{
@@ -348,6 +351,7 @@ export function RecordingSetupModal({
   onConfirm,
   onCancel,
 }: Props) {
+  const { t, preference, setPreference } = useI18n();
   // Destructure settings for convenience (keeps existing code working)
   const {
     webcamShape, webcamSize, webcamCornerRadius, webcamZoom,
@@ -365,8 +369,35 @@ export function RecordingSetupModal({
   const { videoDevices, audioDevices } = useMediaDevices();
 
   const bitrateIndex = BITRATE_LEVELS.findIndex((b) => b.value === videoBitrate);
-  const currentBitrateLabel = bitrateIndex >= 0 ? BITRATE_LEVELS[bitrateIndex].label : "自定义";
+  const bitrateKeys: TranslationKey[] = ["recording.bitrate.low", "recording.bitrate.medium", "recording.bitrate.high", "recording.bitrate.ultra"];
+  const currentBitrateLabel = bitrateIndex >= 0 ? t(bitrateKeys[bitrateIndex]) : t("common.custom");
   const currentCursorStyle = CURSOR_STYLE_PRESETS.find((preset) => preset.value === cursorStyle) ?? CURSOR_STYLE_PRESETS[0];
+  const cursorStyleLabel = currentCursorStyle.value === "little-orange-paw" ? t("cursor.orange") : t("cursor.classic");
+  const cursorStyleSub = currentCursorStyle.value === "little-orange-paw" ? t("cursor.orangeSub") : t("cursor.classicSub");
+  const resolutionSub = (width: number) => {
+    if (width === 1280) return t("recording.res.hd");
+    if (width === 1920) return t("recording.res.fullHd");
+    if (width === 2560) return t("recording.res.qhd");
+    return t("recording.res.ultra");
+  };
+  const aspectSub = (value: string, fallback: string) => {
+    if (value === "4 / 3") return t("recording.aspect.classic");
+    if (value === "3 / 4") return t("recording.aspect.xiaohongshu");
+    if (value === "9 / 16") return t("recording.aspect.douyin");
+    if (value === "1 / 1") return t("recording.aspect.square");
+    return fallback;
+  };
+  const speedLabel = (value: number) => {
+    if (value === 400) return t("recording.speed.fast");
+    if (value === 800) return t("recording.speed.medium");
+    if (value === 1200) return t("recording.speed.slow");
+    return `${value}ms`;
+  };
+  const followLabel =
+    smartZoomDamping <= 0.02 ? t("recording.follow.extraSoft") :
+      smartZoomDamping <= 0.04 ? t("recording.follow.soft") :
+        smartZoomDamping <= 0.08 ? t("recording.follow.medium") :
+          t("recording.follow.sensitive");
   const cursorEffectMode = cursorMagnify ? "magnify" : cursorHighlight ? "highlight" : "off";
   const setCursorEffectMode = (mode: "off" | "highlight" | "magnify") => {
     set("cursorHighlight", mode === "highlight");
@@ -420,7 +451,7 @@ export function RecordingSetupModal({
         {/* ── Right panel: settings ── */}
         <div className="rsetup-right">
           <div className="rsetup-header">
-            <span className="rsetup-title">录制设置</span>
+            <span className="rsetup-title">{t("recording.title")}</span>
             <button className="rsetup-close" onClick={onCancel}>✕</button>
           </div>
 
@@ -433,7 +464,7 @@ export function RecordingSetupModal({
                 onClick={() => setActiveTab(tab.id)}
               >
                 <span className="rsetup-tab-icon">{tab.icon()}</span>
-                <span className="rsetup-tab-label">{tab.label}</span>
+                <span className="rsetup-tab-label">{t(`recording.tab.${tab.id}` as TranslationKey)}</span>
               </button>
             ))}
           </div>
@@ -445,7 +476,22 @@ export function RecordingSetupModal({
               <>
                 {/* Aspect ratio */}
                 <div className="rsetup-section">
-                  <div className="rsetup-section-label">画面比例</div>
+                  <div className="rsetup-section-label">{t("language.setting")}</div>
+                  <select
+                    className="rsetup-device-select"
+                    value={preference}
+                    onChange={(e) => setPreference(e.target.value as typeof preference)}
+                  >
+                    <option value="auto">{t("language.auto")}</option>
+                    <option value="zh-CN">{t("language.zh")}</option>
+                    <option value="en">{t("language.en")}</option>
+                  </select>
+                  <div className="rsetup-effect-hint">{t("language.settingHint")}</div>
+                </div>
+
+                {/* Aspect ratio */}
+                <div className="rsetup-section">
+                  <div className="rsetup-section-label">{t("recording.aspect")}</div>
                   <div className="rsetup-aspect-grid">
                     {ASPECT_PRESETS.map((preset) => (
                       <button
@@ -454,7 +500,7 @@ export function RecordingSetupModal({
                         onClick={() => set("aspectRatio",preset.value)}
                       >
                         <span className="rsetup-aspect-ratio">{preset.label}</span>
-                        <span className="rsetup-aspect-sub">{preset.sub}</span>
+                        <span className="rsetup-aspect-sub">{aspectSub(preset.value, preset.sub)}</span>
                       </button>
                     ))}
                   </div>
@@ -462,10 +508,10 @@ export function RecordingSetupModal({
 
                 {/* Video quality: resolution + framerate + bitrate */}
                 <div className="rsetup-section">
-                  <div className="rsetup-section-label">视频质量</div>
+                  <div className="rsetup-section-label">{t("recording.quality")}</div>
 
                   {/* Resolution */}
-                  <div className="rsetup-sub-label">分辨率</div>
+                  <div className="rsetup-sub-label">{t("recording.resolution")}</div>
                   <div className="rsetup-aspect-grid rsetup-res-grid">
                     {RESOLUTION_PRESETS.map((preset) => {
                       const key = `${preset.width}x${preset.height}`;
@@ -476,14 +522,14 @@ export function RecordingSetupModal({
                           onClick={() => set("resolution",key)}
                         >
                           <span className="rsetup-aspect-ratio">{preset.label}</span>
-                          <span className="rsetup-aspect-sub">{preset.sub}</span>
+                          <span className="rsetup-aspect-sub">{resolutionSub(preset.width)}</span>
                         </button>
                       );
                     })}
                   </div>
 
                   {/* Frame rate */}
-                  <div className="rsetup-sub-label" style={{ marginTop: 14 }}>帧率</div>
+                  <div className="rsetup-sub-label" style={{ marginTop: 14 }}>{t("recording.frameRate")}</div>
                   <div className="rsetup-shape-btns rsetup-shape-btns-3">
                     {FRAME_RATE_PRESETS.map((fps) => (
                       <button
@@ -498,7 +544,7 @@ export function RecordingSetupModal({
 
                   {/* Bitrate / quality */}
                   <div className="rsetup-sub-label" style={{ marginTop: 14 }}>
-                    画质：<span className="rsetup-value">{currentBitrateLabel}</span>
+                    {t("recording.bitrate")}：<span className="rsetup-value">{currentBitrateLabel}</span>
                   </div>
                   <input
                     type="range"
@@ -510,8 +556,8 @@ export function RecordingSetupModal({
                     className="rsetup-slider"
                   />
                   <div className="rsetup-range-labels">
-                    {BITRATE_LEVELS.map((b) => (
-                      <span key={b.value}>{b.label}</span>
+                    {BITRATE_LEVELS.map((b, index) => (
+                      <span key={b.value}>{t(bitrateKeys[index])}</span>
                     ))}
                   </div>
                 </div>
@@ -523,7 +569,7 @@ export function RecordingSetupModal({
               <>
                 {/* Background */}
                 <div className="rsetup-section">
-                  <div className="rsetup-section-label">背景</div>
+                  <div className="rsetup-section-label">{t("recording.tab.background")}</div>
                   <div className="rsetup-bg-tabs">
                     {BG_CATEGORIES.map((cat) => (
                       <button
@@ -531,12 +577,12 @@ export function RecordingSetupModal({
                         className={`rsetup-bg-tab ${bgCategory === cat.id ? "active" : ""}`}
                         onClick={() => setBgCategory(cat.id)}
                       >
-                        {cat.label}
+                        {t(`recording.bg.${cat.id}` as TranslationKey)}
                       </button>
                     ))}
                   </div>
                   <button className="rsetup-random-btn" onClick={randomBg}>
-                    <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M10 2v3M10 15v3M18 10h-3M5 10H2M15.5 4.5l-2 2M6.5 13.5l-2 2M15.5 15.5l-2-2M6.5 6.5l-2-2" /></svg> 随机选择壁纸
+                    <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M10 2v3M10 15v3M18 10h-3M5 10H2M15.5 4.5l-2 2M6.5 13.5l-2 2M15.5 15.5l-2-2M6.5 6.5l-2-2" /></svg> {t("recording.bg.random")}
                   </button>
                   <div className="rsetup-bg-grid">
                     {filteredPresets.map((preset) => (
@@ -550,7 +596,7 @@ export function RecordingSetupModal({
                     <button
                       className={`rsetup-bg-swatch rsetup-bg-custom ${isCustom ? "active" : ""}`}
                       onClick={() => customColorRef.current?.click()}
-                      title="自定义颜色"
+                      title={t("recording.bg.customColor")}
                     />
                     <input
                       ref={customColorRef}
@@ -567,27 +613,27 @@ export function RecordingSetupModal({
                 {/* Canvas border radius */}
                 <div className="rsetup-section">
                   <div className="rsetup-section-label">
-                    圆角半径：<span className="rsetup-value">{canvasBorderRadius}PX</span>
+                    {t("recording.canvasRadius")}：<span className="rsetup-value">{canvasBorderRadius}PX</span>
                   </div>
                   <input
                     type="range" min={0} max={50} value={canvasBorderRadius}
                     onChange={(e) => set("canvasBorderRadius",Number(e.target.value))}
                     className="rsetup-slider"
                   />
-                  <div className="rsetup-range-labels"><span>直角</span><span>圆角</span></div>
+                  <div className="rsetup-range-labels"><span>{t("recording.squareCorner")}</span><span>{t("recording.roundCorner")}</span></div>
                 </div>
 
                 {/* Canvas padding */}
                 <div className="rsetup-section">
                   <div className="rsetup-section-label">
-                    画布边距：<span className="rsetup-value">{canvasPadding}PX</span>
+                    {t("recording.canvasPadding")}：<span className="rsetup-value">{canvasPadding}PX</span>
                   </div>
                   <input
                     type="range" min={0} max={120} value={canvasPadding}
                     onChange={(e) => set("canvasPadding",Number(e.target.value))}
                     className="rsetup-slider"
                   />
-                  <div className="rsetup-range-labels"><span>无</span><span>大</span></div>
+                  <div className="rsetup-range-labels"><span>{t("common.none")}</span><span>{t("common.large")}</span></div>
                 </div>
               </>
             )}
@@ -597,9 +643,9 @@ export function RecordingSetupModal({
               <>
                 {/* Webcam */}
                 <div className="rsetup-section">
-                  <div className="rsetup-section-label">摄像头</div>
+                  <div className="rsetup-section-label">{t("recording.webcam")}</div>
                   <div className="rsetup-toggle-row">
-                    <span className="rsetup-toggle-label">录制时显示摄像头画面</span>
+                    <span className="rsetup-toggle-label">{t("recording.showWebcam")}</span>
                     <label className="toggle-switch">
                       <input type="checkbox" checked={isWebcamOn} onChange={() => onToggleWebcam()} />
                       <span className="toggle-slider" />
@@ -609,55 +655,55 @@ export function RecordingSetupModal({
                   {isWebcamOn && (
                     <>
                       <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                        大小：<span className="rsetup-value">{webcamSize}px</span>
+                        {t("recording.size")}：<span className="rsetup-value">{webcamSize}px</span>
                       </div>
                       <input
                         type="range" min={80} max={400} value={webcamSize}
                         onChange={(e) => set("webcamSize",Number(e.target.value))}
                         className="rsetup-slider"
                       />
-                      <div className="rsetup-range-labels"><span>小</span><span>大</span></div>
+                      <div className="rsetup-range-labels"><span>{t("common.small")}</span><span>{t("common.large")}</span></div>
 
                       <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                        画面裁剪：<span className="rsetup-value">{webcamZoom.toFixed(1)}x</span>
+                        {t("recording.webcamCrop")}：<span className="rsetup-value">{webcamZoom.toFixed(1)}x</span>
                       </div>
                       <input
                         type="range" min={1.0} max={3.0} step={0.1} value={webcamZoom}
                         onChange={(e) => set("webcamZoom",Number(e.target.value))}
                         className="rsetup-slider"
                       />
-                      <div className="rsetup-range-labels"><span>原始</span><span>放大裁剪</span></div>
+                      <div className="rsetup-range-labels"><span>{t("recording.original")}</span><span>{t("recording.zoomCrop")}</span></div>
                       {webcamZoom > 1 && (
                         <div style={{ fontSize: 11, color: '#888', marginTop: -2 }}>
-                          裁剪画面中心区域，适合广角前置摄像头放大人物
+                          {t("recording.webcamCropHint")}
                         </div>
                       )}
 
-                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>形状</div>
+                      <div className="rsetup-section-label" style={{ marginTop: 14 }}>{t("recording.shape")}</div>
                       <div className="rsetup-shape-btns rsetup-shape-btns-4">
                         <button
                           className={`rsetup-shape-btn ${webcamShape === "rectangle" ? "active" : ""}`}
                           onClick={() => set("webcamShape","rectangle")}
                         >
-                          <svg width={14} height={10} viewBox="0 0 16 10" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="14" height="8" rx="1.5" /></svg> 长方形
+                          <svg width={14} height={10} viewBox="0 0 16 10" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="14" height="8" rx="1.5" /></svg> {t("recording.shape.rectangle")}
                         </button>
                         <button
                           className={`rsetup-shape-btn ${webcamShape === "square" ? "active" : ""}`}
                           onClick={() => set("webcamShape","square")}
                         >
-                          <svg width={12} height={12} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="12" height="12" rx="1.5" /></svg> 正方形
+                          <svg width={12} height={12} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="12" height="12" rx="1.5" /></svg> {t("recording.shape.square")}
                         </button>
                         <button
                           className={`rsetup-shape-btn ${webcamShape === "circle" ? "active" : ""}`}
                           onClick={() => set("webcamShape","circle")}
                         >
-                          <svg width={12} height={12} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="7" r="6" /></svg> 圆形
+                          <svg width={12} height={12} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="7" r="6" /></svg> {t("recording.shape.circle")}
                         </button>
                         <button
                           className={`rsetup-shape-btn ${webcamShape === "squircle" ? "active" : ""}`}
                           onClick={() => set("webcamShape","squircle")}
                         >
-                          <svg width={12} height={12} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="12" height="12" rx="4" /></svg> 超椭圆
+                          <svg width={12} height={12} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="12" height="12" rx="4" /></svg> {t("recording.shape.squircle")}
                         </button>
                       </div>
 
@@ -665,27 +711,27 @@ export function RecordingSetupModal({
                       {webcamShape !== "circle" && webcamShape !== "squircle" && (
                         <>
                           <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                            边框圆角：<span className="rsetup-value">{webcamCornerRadius}%</span>
+                            {t("recording.borderRadius")}：<span className="rsetup-value">{webcamCornerRadius}%</span>
                           </div>
                           <input
                             type="range" min={0} max={50} value={webcamCornerRadius}
                             onChange={(e) => set("webcamCornerRadius",Number(e.target.value))}
                             className="rsetup-slider"
                           />
-                          <div className="rsetup-range-labels"><span>直角</span><span>圆角</span></div>
+                          <div className="rsetup-range-labels"><span>{t("recording.squareCorner")}</span><span>{t("recording.roundCorner")}</span></div>
                         </>
                       )}
 
                       {/* Camera device selector */}
                       {videoDevices.length > 0 && (
                         <>
-                          <div className="rsetup-section-label" style={{ marginTop: 14 }}>摄像头设备</div>
+                          <div className="rsetup-section-label" style={{ marginTop: 14 }}>{t("recording.cameraDevice")}</div>
                           <select
                             className="rsetup-device-select"
                             value={videoDeviceId}
                             onChange={(e) => set("videoDeviceId",e.target.value)}
                           >
-                            <option value="">默认</option>
+                            <option value="">{t("common.default")}</option>
                             {videoDevices.map((d) => (
                               <option key={d.deviceId} value={d.deviceId}>{d.label}</option>
                             ))}
@@ -696,13 +742,13 @@ export function RecordingSetupModal({
                       {/* Microphone selector */}
                       {audioDevices.length > 0 && (
                         <>
-                          <div className="rsetup-section-label" style={{ marginTop: 14 }}>麦克风设备</div>
+                          <div className="rsetup-section-label" style={{ marginTop: 14 }}>{t("recording.microphoneDevice")}</div>
                           <select
                             className="rsetup-device-select"
                             value={audioDeviceId}
                             onChange={(e) => set("audioDeviceId",e.target.value)}
                           >
-                            <option value="">默认</option>
+                            <option value="">{t("common.default")}</option>
                             {audioDevices.map((d) => (
                               <option key={d.deviceId} value={d.deviceId}>{d.label}</option>
                             ))}
@@ -715,7 +761,7 @@ export function RecordingSetupModal({
 
                 {/* Capture source */}
                 <div className="rsetup-section">
-                  <div className="rsetup-section-label">采集源</div>
+                  <div className="rsetup-section-label">{t("recording.captureSource")}</div>
 
                   {/* Quick-add buttons */}
                   <div className="rsetup-shape-btns" style={{ marginBottom: 10 }}>
@@ -724,7 +770,7 @@ export function RecordingSetupModal({
                       disabled={captureIsFull}
                       onClick={() => onAddScreenCapture()}
                     >
-                      <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="16" height="11" rx="2" /><line x1="7" y1="17" x2="13" y2="17" /><line x1="10" y1="14" x2="10" y2="17" /></svg> 屏幕采集
+                      <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="16" height="11" rx="2" /><line x1="7" y1="17" x2="13" y2="17" /><line x1="10" y1="14" x2="10" y2="17" /></svg> {t("recording.screenCapture")}
                     </button>
                     <button
                       className="rsetup-shape-btn"
@@ -733,7 +779,7 @@ export function RecordingSetupModal({
                         if (videoDevices.length > 0) onAddDeviceCapture(videoDevices[0].deviceId, videoDevices[0].label);
                       }}
                     >
-                      <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="12" height="10" rx="1.5" /><path d="M14 9l4-2v6l-4-2z" /></svg> 设备采集
+                      <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="12" height="10" rx="1.5" /><path d="M14 9l4-2v6l-4-2z" /></svg> {t("recording.deviceCapture")}
                     </button>
                   </div>
 
@@ -760,38 +806,38 @@ export function RecordingSetupModal({
                               color: '#e03131', fontSize: 11, fontWeight: 600,
                               padding: '2px 6px', borderRadius: 4,
                             }}
-                          >✕ 关闭</button>
+                          >x {t("common.close")}</button>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div style={{ fontSize: 12, color: '#aaa', padding: '6px 0' }}>
-                      暂无活跃采集源。点击上方按钮添加，或使用工具栏
+                      {t("recording.noCapture")}
                       <svg width={12} height={12} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-1.5px', margin: '0 2px' }}><rect x={2} y={4} width={16} height={11} rx={1.5} /><circle cx={13} cy={9} r={2} /><circle cx={5} cy={9} r={1} /><line x1={7} y1={15} x2={13} y2={15} /><line x1={10} y1={15} x2={10} y2={17} /><line x1={6} y1={17} x2={14} y2={17} /></svg>
-                      采集按钮。
+                      
                     </div>
                   )}
 
                   {captureSources.length > 0 && (
                     <>
                       <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                        默认大小：<span className="rsetup-value">{captureSize}px</span>
+                        {t("recording.defaultSize")}：<span className="rsetup-value">{captureSize}px</span>
                       </div>
                       <input
                         type="range" min={160} max={800} value={captureSize}
                         onChange={(e) => set("captureSize",Number(e.target.value))}
                         className="rsetup-slider"
                       />
-                      <div className="rsetup-range-labels"><span>小</span><span>大</span></div>
+                      <div className="rsetup-range-labels"><span>{t("common.small")}</span><span>{t("common.large")}</span></div>
                     </>
                   )}
 
                   {captureIsFull && (
-                    <div style={{ fontSize: 11, color: '#e03131', marginTop: 6 }}>已达最大数量 (4)</div>
+                    <div style={{ fontSize: 11, color: '#e03131', marginTop: 6 }}>{t("app.maxCaptureReached")}</div>
                   )}
 
                   <div style={{ marginTop: 10, fontSize: 12, color: '#888', lineHeight: 1.5 }}>
-                    <svg width={12} height={12} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, verticalAlign: 'middle', marginRight: 4 }}><path d="M7 15h6M8 18h4M10 2a6 6 0 014 10.5V14H6v-1.5A6 6 0 0110 2z" /></svg>采集的画面将显示为浮动窗口，可拖拽调整位置。录制时会自动合成到视频中。
+                    <svg width={12} height={12} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, verticalAlign: 'middle', marginRight: 4 }}><path d="M7 15h6M8 18h4M10 2a6 6 0 014 10.5V14H6v-1.5A6 6 0 0110 2z" /></svg>{t("recording.captureHint")}
                   </div>
                 </div>
               </>
@@ -802,34 +848,34 @@ export function RecordingSetupModal({
               <>
                 {/* Cursor final render effect */}
                 <div className="rsetup-section">
-                  <div className="rsetup-section-label">鼠标最终渲染效果</div>
+                  <div className="rsetup-section-label">{t("recording.cursorFinal")}</div>
                   <div className="rsetup-effect-mode-grid">
                     <button
                       type="button"
                       className={`rsetup-shape-btn ${cursorEffectMode === "off" ? "active" : ""}`}
                       onClick={() => setCursorEffectMode("off")}
                     >
-                      不显示
+                      {t("recording.cursorOff")}
                     </button>
                     <button
                       type="button"
                       className={`rsetup-shape-btn ${cursorEffectMode === "highlight" ? "active" : ""}`}
                       onClick={() => setCursorEffectMode("highlight")}
                     >
-                      高亮光圈
+                      {t("recording.cursorHighlight")}
                     </button>
                     <button
                       type="button"
                       className={`rsetup-shape-btn ${cursorEffectMode === "magnify" ? "active" : ""}`}
                       onClick={() => setCursorEffectMode("magnify")}
                     >
-                      放大指针
+                      {t("recording.cursorMagnify")}
                     </button>
                   </div>
-                  <div className="rsetup-effect-hint">仅影响导出视频中的鼠标呈现，不改变书写时的实际操作指针。</div>
+                  <div className="rsetup-effect-hint">{t("recording.cursorHint")}</div>
                   {cursorHighlight && (
                     <>
-                      <div className="rsetup-section-label" style={{ marginTop: 10 }}>高亮颜色</div>
+                      <div className="rsetup-section-label" style={{ marginTop: 10 }}>{t("recording.highlightColor")}</div>
                       <div className="rsetup-cursor-colors">
                         {CURSOR_COLORS.map((c) => (
                           <button
@@ -844,8 +890,8 @@ export function RecordingSetupModal({
                   )}
                   {cursorMagnify && (
                     <>
-                      <div className="rsetup-section-label" style={{ marginTop: 10 }}>光标样式</div>
-                      <div className="rsetup-pack-name">{currentCursorStyle.label} · {currentCursorStyle.sub}</div>
+                      <div className="rsetup-section-label" style={{ marginTop: 10 }}>{t("recording.cursorStyle")}</div>
+                      <div className="rsetup-pack-name">{cursorStyleLabel} · {cursorStyleSub}</div>
                       <div className="rsetup-cursor-style-grid">
                         {CURSOR_STYLE_PRESETS.map((preset) => (
                           <button
@@ -858,34 +904,34 @@ export function RecordingSetupModal({
                               {preset.value === "little-orange-paw" ? (
                                 <img src={littleOrangePawCursorUrl} alt="" />
                               ) : (
-                                <svg className="rsetup-classic-cursor-icon" viewBox="0 0 24 24" role="img" aria-label="经典箭头">
+                                <svg className="rsetup-classic-cursor-icon" viewBox="0 0 24 24" role="img" aria-label={t("cursor.classic")}>
                                   <path d="M5 3.8v15.4l4.1-4 2.7 6.1 3-1.3-2.8-6 5.7-.3L5 3.8Z" />
                                 </svg>
                               )}
                             </span>
-                            <span className="rsetup-aspect-ratio">{preset.label}</span>
-                            <span className="rsetup-aspect-sub">{preset.sub}</span>
+                            <span className="rsetup-aspect-ratio">{preset.value === "little-orange-paw" ? t("cursor.orange") : t("cursor.classic")}</span>
+                            <span className="rsetup-aspect-sub">{preset.value === "little-orange-paw" ? t("cursor.orangeSub") : t("cursor.classicSub")}</span>
                           </button>
                         ))}
                       </div>
                       <div className="rsetup-section-label" style={{ marginTop: 10 }}>
-                        放大倍率：<span className="rsetup-value">{cursorMagnifySize.toFixed(1)}x</span>
+                        {t("recording.cursorScale")}：<span className="rsetup-value">{cursorMagnifySize.toFixed(1)}x</span>
                       </div>
                       <input
                         type="range" min={1.2} max={3.0} step={0.1} value={cursorMagnifySize}
                         onChange={(e) => set("cursorMagnifySize",Number(e.target.value))}
                         className="rsetup-slider"
                       />
-                      <div className="rsetup-range-labels"><span>微放大</span><span>超大</span></div>
+                      <div className="rsetup-range-labels"><span>{t("recording.slightMagnify")}</span><span>{t("recording.extraLarge")}</span></div>
                     </>
                   )}
                 </div>
 
                 {/* Smart Zoom */}
                 <div className="rsetup-section">
-                  <div className="rsetup-section-label">智能缩放</div>
+                  <div className="rsetup-section-label">{t("recording.smartZoom")}</div>
                   <div className="rsetup-toggle-row">
-                    <span className="rsetup-toggle-label">录制时自动聚焦到鼠标操作区域</span>
+                    <span className="rsetup-toggle-label">{t("recording.smartZoomToggle")}</span>
                     <label className="toggle-switch">
                       <input type="checkbox" checked={smartZoom} onChange={(e) => set("smartZoom",e.target.checked)} />
                       <span className="toggle-slider" />
@@ -894,18 +940,18 @@ export function RecordingSetupModal({
                   {smartZoom && (
                     <>
                       <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                        缩放倍率：<span className="rsetup-value">{smartZoomLevel.toFixed(1)}x</span>
+                        {t("recording.zoomLevel")}：<span className="rsetup-value">{smartZoomLevel.toFixed(1)}x</span>
                       </div>
                       <input
                         type="range" min={1.2} max={3.0} step={0.1} value={smartZoomLevel}
                         onChange={(e) => set("smartZoomLevel",Number(e.target.value))}
                         className="rsetup-slider"
                       />
-                      <div className="rsetup-range-labels"><span>微缩</span><span>特写</span></div>
+                      <div className="rsetup-range-labels"><span>{t("recording.slightZoom")}</span><span>{t("recording.closeup")}</span></div>
 
                       <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                        过渡速度：<span className="rsetup-value">
-                          {SMART_ZOOM_SPEED_PRESETS.find(p => p.value === smartZoomTransition)?.label ?? `${smartZoomTransition}ms`}
+                        {t("recording.transitionSpeed")}：<span className="rsetup-value">
+                          {speedLabel(smartZoomTransition)}
                         </span>
                       </div>
                       <div className="rsetup-shape-btns rsetup-shape-btns-3">
@@ -915,32 +961,30 @@ export function RecordingSetupModal({
                             className={`rsetup-shape-btn ${smartZoomTransition === preset.value ? "active" : ""}`}
                             onClick={() => set("smartZoomTransition",preset.value)}
                           >
-                            {preset.label}
+                            {speedLabel(preset.value)}
                           </button>
                         ))}
                       </div>
 
                       <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                        回退延迟：<span className="rsetup-value">{(smartZoomIdleDelay / 1000).toFixed(1)}s</span>
+                        {t("recording.backDelay")}：<span className="rsetup-value">{(smartZoomIdleDelay / 1000).toFixed(1)}s</span>
                       </div>
                       <input
                         type="range" min={500} max={3000} step={100} value={smartZoomIdleDelay}
                         onChange={(e) => set("smartZoomIdleDelay",Number(e.target.value))}
                         className="rsetup-slider"
                       />
-                      <div className="rsetup-range-labels"><span>快速回退</span><span>长时间保持</span></div>
+                      <div className="rsetup-range-labels"><span>{t("recording.fastBack")}</span><span>{t("recording.holdLong")}</span></div>
 
                       <div className="rsetup-section-label" style={{ marginTop: 14 }}>
-                        跟随灵敏度：<span className="rsetup-value">
-                          {smartZoomDamping <= 0.02 ? "极柔" : smartZoomDamping <= 0.04 ? "柔和" : smartZoomDamping <= 0.08 ? "适中" : "灵敏"}
-                        </span>
+                        {t("recording.followSensitivity")}：<span className="rsetup-value">{followLabel}</span>
                       </div>
                       <input
                         type="range" min={0.01} max={0.15} step={0.01} value={smartZoomDamping}
                         onChange={(e) => set("smartZoomDamping",Number(e.target.value))}
                         className="rsetup-slider"
                       />
-                      <div className="rsetup-range-labels"><span>极柔（几乎不晃）</span><span>灵敏（紧跟鼠标）</span></div>
+                      <div className="rsetup-range-labels"><span>{t("recording.followRangeLeft")}</span><span>{t("recording.followRangeRight")}</span></div>
                     </>
                   )}
                 </div>
@@ -952,10 +996,10 @@ export function RecordingSetupModal({
           {/* Footer */}
           <div className="rsetup-footer">
             <div className="rsetup-footer-actions">
-              <button className="rsetup-btn-secondary" onClick={onReset}>重置</button>
-              <button className="rsetup-btn-secondary" onClick={onSaveDefaults}>保存为默认</button>
+              <button className="rsetup-btn-secondary" onClick={onReset}>{t("common.reset")}</button>
+              <button className="rsetup-btn-secondary" onClick={onSaveDefaults}>{t("common.saveAsDefault")}</button>
             </div>
-            <button className="rsetup-confirm" onClick={onConfirm}>完成</button>
+            <button className="rsetup-confirm" onClick={onConfirm}>{t("common.done")}</button>
           </div>
         </div>
       </div>

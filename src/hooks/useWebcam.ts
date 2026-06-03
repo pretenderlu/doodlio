@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { translateNow } from "../i18n";
 
 interface WebcamState {
   stream: MediaStream | null;
@@ -28,7 +29,7 @@ export function useWebcam(videoDeviceId?: string) {
       setWebcamState({
         stream: null,
         isOn: false,
-        error: err instanceof Error ? err.message : "无法访问摄像头",
+        error: err instanceof Error ? err.message : translateNow("webcam.accessFailed"),
       });
     }
   }, []);

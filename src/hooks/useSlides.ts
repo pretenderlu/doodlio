@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import type { WhiteboardElement } from "../types/elements";
+import { translateNow } from "../i18n";
 import { renderScene } from "../utils/renderer";
 
 export interface SlideItem {
@@ -131,7 +132,7 @@ export function useSlides() {
 
     const newSlide: SlideItem = {
       id: `slide-${idCounter.current}`,
-      name: name || `幻灯片 ${idCounter.current}`,
+      name: name || translateNow("slides.defaultName", { index: idCounter.current }),
       elements: cloned,
       thumbnailUrl: thumbnail,
     };
@@ -253,7 +254,7 @@ export function useSlides() {
     idCounter.current += 1;
     const blankSlide: SlideItem = {
       id: `slide-${idCounter.current}`,
-      name: `幻灯片 ${idCounter.current}`,
+      name: translateNow("slides.defaultName", { index: idCounter.current }),
       elements: [],
       thumbnailUrl: captureThumbnail([]),
     };

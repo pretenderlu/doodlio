@@ -1,4 +1,5 @@
 import { useRef, useCallback } from "react";
+import { useI18n } from "../i18n";
 
 interface ColorPickerButtonProps {
   currentColor: string;
@@ -12,6 +13,7 @@ interface ColorPickerButtonProps {
  * onCommit is debounced so only the final picked color is recorded.
  */
 export function ColorPickerButton({ currentColor, onChange, onCommit }: ColorPickerButtonProps) {
+  const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -27,7 +29,7 @@ export function ColorPickerButton({ currentColor, onChange, onCommit }: ColorPic
       <button
         className="props-color-picker-btn"
         onClick={() => inputRef.current?.click()}
-        title="调色盘"
+        title={t("color.palette")}
         type="button"
       />
       <input

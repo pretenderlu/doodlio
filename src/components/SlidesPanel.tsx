@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import type { SlideItem } from "../hooks/useSlides";
+import { useI18n } from "../i18n";
 
 interface SlidesPanelProps {
   slides: SlideItem[];
@@ -32,6 +33,7 @@ export function SlidesPanel({
   onRenameSlide,
   onReorderSlide,
 }: SlidesPanelProps) {
+  const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingName, setEditingName] = useState("");
@@ -114,7 +116,7 @@ export function SlidesPanel({
   return (
     <div className="slides-panel">
       <div className="slides-panel-header">
-        <span className="slides-panel-title">幻灯片</span>
+        <span className="slides-panel-title">{t("app.slides")}</span>
         <div className="slides-panel-header-right">
           <label className="toggle-switch toggle-switch-sm">
             <input
@@ -130,8 +132,8 @@ export function SlidesPanel({
       <div className="slides-panel-body">
         {slides.length === 0 ? (
           <div className="slides-panel-empty">
-            <p>暂无幻灯片</p>
-            <p className="slides-panel-hint">当前画板内容可保存为幻灯片</p>
+            <p>{t("slides.empty")}</p>
+            <p className="slides-panel-hint">{t("slides.emptyHint")}</p>
           </div>
         ) : (
           <>
@@ -154,7 +156,7 @@ export function SlidesPanel({
                   <img src={slide.thumbnailUrl} alt={slide.name} />
                   <span className="slides-panel-thumb-index">{i + 1}</span>
                   {i === currentIndex && (
-                    <span className="slides-panel-editing-badge">编辑中</span>
+                    <span className="slides-panel-editing-badge">{t("slides.editing")}</span>
                   )}
                   {editingIndex === i ? (
                     <input
@@ -173,7 +175,7 @@ export function SlidesPanel({
                         e.stopPropagation();
                         startRename(i, slide.name);
                       }}
-                      title="双击重命名"
+                      title={t("slides.rename")}
                     >
                       {slide.name}
                     </span>
@@ -184,7 +186,7 @@ export function SlidesPanel({
                       e.stopPropagation();
                       onRemoveSlide(i);
                     }}
-                    title="删除"
+                    title={t("slides.delete")}
                   >
                     <svg width={10} height={10} viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"><line x1="2" y1="2" x2="8" y2="8" /><line x1="8" y1="2" x2="2" y2="8" /></svg>
                   </button>
@@ -200,16 +202,16 @@ export function SlidesPanel({
           <button
             className="slides-panel-btn slides-panel-save"
             onClick={onSaveAsSlide}
-            title="将当前画板内容保存为一页新幻灯片"
+            title={t("slides.saveNewTitle")}
           >
-            <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"><path d="M12.5 14H3.5a1 1 0 01-1-1V3a1 1 0 011-1h7l3 3v8a1 1 0 01-1 1z" /><path d="M11 14V9H5v5" /><path d="M5 2v3h5" /></svg> 存为新页
+            <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"><path d="M12.5 14H3.5a1 1 0 01-1-1V3a1 1 0 011-1h7l3 3v8a1 1 0 01-1 1z" /><path d="M11 14V9H5v5" /><path d="M5 2v3h5" /></svg> {t("slides.saveNew")}
           </button>
           <button
             className="slides-panel-btn slides-panel-new"
             onClick={onAddBlankSlide}
-            title="新建一页空白幻灯片"
+            title={t("slides.blankTitle")}
           >
-            <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"><line x1="8" y1="3" x2="8" y2="13" /><line x1="3" y1="8" x2="13" y2="8" /></svg> 新建空白页
+            <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round"><line x1="8" y1="3" x2="8" y2="13" /><line x1="3" y1="8" x2="13" y2="8" /></svg> {t("slides.blank")}
           </button>
         </div>
         <div className="slides-panel-footer-row">
@@ -217,24 +219,24 @@ export function SlidesPanel({
             className="slides-panel-btn slides-panel-update"
             onClick={onUpdateCurrentSlide}
             disabled={slides.length === 0 || currentIndex < 0}
-            title="将当前画板修改保存到此页幻灯片"
+            title={t("slides.updateTitle")}
           >
-            <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"><path d="M13 8a5 5 0 01-9.3 2.5" /><path d="M3 8a5 5 0 019.3-2.5" /><polyline points="13 3 13 6.5 9.5 6.5" /><polyline points="3 13 3 9.5 6.5 9.5" /></svg> 保存修改
+            <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"><path d="M13 8a5 5 0 01-9.3 2.5" /><path d="M3 8a5 5 0 019.3-2.5" /><polyline points="13 3 13 6.5 9.5 6.5" /><polyline points="3 13 3 9.5 6.5 9.5" /></svg> {t("slides.update")}
           </button>
           <button
             className="slides-panel-btn slides-panel-import"
             onClick={handleImport}
-            title="导入图片为幻灯片"
+            title={t("slides.importImageTitle")}
           >
-            <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="12" height="10" rx="1" /><circle cx="5.5" cy="6.5" r="1" /><path d="M14 10l-3-3-5 5" /></svg> 导入图片
+            <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="12" height="10" rx="1" /><circle cx="5.5" cy="6.5" r="1" /><path d="M14 10l-3-3-5 5" /></svg> {t("slides.importImage")}
           </button>
           <button
             className="slides-panel-btn slides-panel-clear"
             onClick={onClearSlides}
             disabled={slides.length === 0}
-            title="清空所有幻灯片"
+            title={t("slides.clearTitle")}
           >
-            <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h12" /><path d="M5 4V2.5A.5.5 0 015.5 2h5a.5.5 0 01.5.5V4" /><path d="M12.5 4l-.7 9.1a1 1 0 01-1 .9H5.2a1 1 0 01-1-.9L3.5 4" /></svg> 清空
+            <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h12" /><path d="M5 4V2.5A.5.5 0 015.5 2h5a.5.5 0 01.5.5V4" /><path d="M12.5 4l-.7 9.1a1 1 0 01-1 .9H5.2a1 1 0 01-1-.9L3.5 4" /></svg> {t("slides.clear")}
           </button>
         </div>
       </div>
@@ -249,7 +251,7 @@ export function SlidesPanel({
       />
 
       <div className="slides-panel-shortcut-hint">
-        <kbd>PageUp</kbd> 上一张 · <kbd>PageDown</kbd> 下一张
+        <kbd>PageUp</kbd> {t("slides.prevNext", { nextKey: "PageDown" })}
       </div>
     </div>
   );

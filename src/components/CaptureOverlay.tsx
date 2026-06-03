@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useI18n } from "../i18n";
 
 interface Position {
   x: number;
@@ -42,6 +43,7 @@ interface CropSelectorProps {
 type CropDragMode = "move" | "nw" | "ne" | "sw" | "se" | "n" | "s" | "w" | "e" | null;
 
 function CropSelector({ crop, onChange, onConfirm, onCancel, containerW, containerH }: CropSelectorProps) {
+  const { t } = useI18n();
   const dragRef = useRef<{ mode: CropDragMode; startX: number; startY: number; startCrop: CropRect } | null>(null);
 
   const px = (v: number, total: number) => v * total;
@@ -223,7 +225,7 @@ function CropSelector({ crop, onChange, onConfirm, onCancel, containerW, contain
           }}
         >
           <svg width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M2 8l4 4 8-8" /></svg>
-          确认
+          {t("common.confirm")}
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onCancel(); }}
@@ -234,7 +236,7 @@ function CropSelector({ crop, onChange, onConfirm, onCancel, containerW, contain
             cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
           }}
         >
-          取消
+          {t("common.cancel")}
         </button>
       </div>
     </div>
@@ -252,6 +254,7 @@ export function CaptureOverlay({
   borderRadius = 12,
   stackIndex = 0,
 }: CaptureOverlayProps) {
+  const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [pos, setPos] = useState<Position>({ x: -1, y: -1 });
   const [width, setWidth] = useState(initialWidth);
@@ -521,7 +524,7 @@ export function CaptureOverlay({
             boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
             zIndex: 1,
           }}
-          title="停止采集"
+          title={t("capture.stop")}
         >
           ✕
         </button>
@@ -553,7 +556,7 @@ export function CaptureOverlay({
             boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
             zIndex: 1,
           }}
-          title={hasCrop ? "编辑裁剪区域" : "裁剪画面"}
+          title={hasCrop ? t("capture.editCrop") : t("capture.crop")}
         >
           <svg width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 0v12h12" />
@@ -588,7 +591,7 @@ export function CaptureOverlay({
             boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
             zIndex: 1,
           }}
-          title="重置裁剪"
+          title={t("capture.resetCrop")}
         >
           <svg width={12} height={12} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 4h4L3.5 1.5" />

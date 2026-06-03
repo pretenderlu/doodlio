@@ -4,6 +4,7 @@ import { getMindMapCascadeDeleteIds } from "../utils/mindmapHelpers";
 import { useColorStore } from "../hooks/useColorStore";
 import { ColorPickerButton } from "./ColorPickerButton";
 import type { FillStyle, PenLineStyle } from "../types/elements";
+import { useI18n } from "../i18n";
 
 const STROKE_COLORS = ["#1e1e1e", "#e03131", "#2f9e44", "#1971c2", "#f08c00", "#9c36b5"];
 const FILL_COLORS = ["#fce4ec", "#d3f9d8", "#d0ebff", "#fff3bf", "#ffe8cc", "#f3d9fa"];
@@ -192,6 +193,7 @@ const ROUGH_TOOLS = ["line", "rectangle", "ellipse", "arrow", "mindmap"];
 const ROUGH_TYPES = ["line", "rectangle", "ellipse", "arrow", "mindmap-node", "mindmap-edge"];
 
 export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style }: { collapsed?: boolean; style?: React.CSSProperties }) {
+  const { t } = useI18n();
   const { state, dispatch, setStyle, setEraserMode, setEraserSize, setLaserDuration, setPenLineStyle, reorderElement, duplicateElement } = useWhiteboard();
   const { activeTool, activeStyle, selectedElementIds, elements, eraserMode, eraserSize, laserDuration } = state;
 
@@ -216,6 +218,13 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
   const selectedIsMindmapNode = hasSingleSelection && selectedEl?.type === "mindmap-node";
   const isTextContext = isText || selectedIsText;
   const isMindmap = activeTool === "mindmap";
+  const fontLabel = (font: string) => {
+    if (font === "sans-serif") return t("font.sans");
+    if (font === "serif") return t("font.serif");
+    if (font === "monospace") return t("font.mono");
+    if (font.includes("Caveat")) return t("font.handwriting");
+    return FONT_PRESETS.find((preset) => preset.value === font)?.label ?? font;
+  };
   const isPen = activeTool === "pen";
   const selectedIsPen = hasSingleSelection && selectedEl?.type === "pen" && !(selectedEl as import("../types/elements").PenElement).highlighter;
   const isPenContext = isPen || selectedIsPen;
@@ -257,7 +266,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* Text border toggle */}
       {isTextContext && (
         <div className="props-section">
-          <div className="props-label">边框</div>
+          <div className="props-label">{t("props.border")}</div>
           <div className="props-btn-row">
             <button
               className={`props-icon-btn wide ${!textHasBorder ? "active" : ""}`}
@@ -273,12 +282,12 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
                   dispatch({ type: "SET_TEXT_STYLE", showBorder: false });
                 }
               }}
-              title="无边框"
+              title={t("props.noBorder")}
             >
               <svg width={22} height={22} viewBox="0 0 22 22">
                 <text x={4} y={16} fontSize={14} fill="#555" fontFamily="sans-serif">A</text>
               </svg>
-              <span className="props-icon-label">无</span>
+              <span className="props-icon-label">{t("common.none")}</span>
             </button>
             <button
               className={`props-icon-btn wide ${textHasBorder ? "active" : ""}`}
@@ -294,13 +303,13 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
                   dispatch({ type: "SET_TEXT_STYLE", showBorder: true });
                 }
               }}
-              title="显示边框"
+              title={t("props.showBorder")}
             >
               <svg width={22} height={22} viewBox="0 0 22 22">
                 <rect x={2} y={2} width={18} height={18} rx={2} fill="none" stroke="#555" strokeWidth={1.5} />
                 <text x={5} y={16} fontSize={12} fill="#555" fontFamily="sans-serif">A</text>
               </svg>
-              <span className="props-icon-label">边框</span>
+              <span className="props-icon-label">{t("props.border")}</span>
             </button>
           </div>
         </div>
@@ -309,7 +318,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* Pen line style toggle */}
       {isPenContext && (
         <div className="props-section">
-          <div className="props-label">线条风格</div>
+          <div className="props-label">{t("props.lineStyle")}</div>
           <div className="props-btn-row">
             <button
               className={`props-icon-btn wide ${penLineStyle === "default" ? "active" : ""}`}
@@ -323,12 +332,12 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
                   });
                 }
               }}
-              title="默认平滑笔画"
+              title={t("props.default")}
             >
               <svg width={22} height={22} viewBox="0 0 22 22">
                 <path d="M3,16 Q6,4 11,11 T19,6" fill="none" stroke="#555" strokeWidth={2} strokeLinecap="round" />
               </svg>
-              <span className="props-icon-label">默认</span>
+              <span className="props-icon-label">{t("props.default")}</span>
             </button>
             <button
               className={`props-icon-btn wide ${penLineStyle === "sketchy" ? "active" : ""}`}
@@ -342,13 +351,13 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
                   });
                 }
               }}
-              title="涂鸦手绘风格"
+              title={t("props.doodle")}
             >
               <svg width={22} height={22} viewBox="0 0 22 22">
                 <path d="M3,15 Q5,6 8,12 Q10,17 12,9 Q14,3 16,10 Q18,15 19,7" fill="none" stroke="#555" strokeWidth={1.8} strokeLinecap="round" />
                 <path d="M3,16 Q5,7 8,13 Q10,18 12,10 Q14,4 16,11 Q18,16 19,8" fill="none" stroke="#555" strokeWidth={0.8} strokeLinecap="round" opacity={0.4} />
               </svg>
-              <span className="props-icon-label">涂鸦</span>
+              <span className="props-icon-label">{t("props.doodle")}</span>
             </button>
           </div>
         </div>
@@ -358,7 +367,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {(isDrawing || hasSelection) && (
         <div className="props-section">
           <div className="props-label">
-            {showTextBorderControls ? "边框颜色" : isTextContext ? "字体颜色" : selectedIsMindmapNode ? "边框颜色" : "描边"}
+            {showTextBorderControls ? t("props.borderColor") : isTextContext ? t("props.fontColor") : selectedIsMindmapNode ? t("props.borderColor") : t("props.stroke")}
           </div>
           <div className="props-color-row">
             {STROKE_COLORS.map((c) => (
@@ -391,7 +400,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
           </div>
           {colorStore.recentStrokeColors.length > 0 && (
             <div className="props-color-extra-row">
-              <span className="props-mini-label">近期</span>
+              <span className="props-mini-label">{t("props.recent")}</span>
               {colorStore.recentStrokeColors.map((c) => (
                 <button
                   key={`recent-${c}`}
@@ -399,10 +408,10 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
                   style={{ background: c }}
                   onClick={() => setStyleProp("strokeColor", c)}
                   onContextMenu={(e) => { e.preventDefault(); colorStore.toggleFavorite(c); }}
-                  title={`${c}${colorStore.isFavorite(c) ? " ★" : ""} (右键收藏)`}
+                  title={`${c}${colorStore.isFavorite(c) ? " ★" : ""} (${t("props.rightClickFavorite")})`}
                 />
               ))}
-              <button className="props-mini-clear" onClick={() => colorStore.clearRecentStroke()} title="清空近期">✕</button>
+              <button className="props-mini-clear" onClick={() => colorStore.clearRecentStroke()} title={t("props.clearRecent")}>x</button>
             </div>
           )}
         </div>
@@ -411,7 +420,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* Font color for text with border (separate from border color) */}
       {showTextBorderControls && (
         <div className="props-section">
-          <div className="props-label">字体颜色</div>
+          <div className="props-label">{t("props.fontColor")}</div>
           <div className="props-color-row">
             {STROKE_COLORS.map((c) => {
               const currentFontColor = selectedIsText
@@ -462,12 +471,12 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* 2. Fill color */}
       {(isShape || selectedIsShape || showTextBorderControls) && (
         <div className="props-section">
-          <div className="props-label">背景</div>
+          <div className="props-label">{t("props.background")}</div>
           <div className="props-color-row">
             <button
               className={`props-swatch props-transparent ${currentStyle.fillColor === "transparent" ? "active" : ""}`}
               onClick={() => setStyleProp("fillColor", "transparent")}
-              title="透明"
+              title={t("props.transparent")}
             />
             {FILL_COLORS.map((c) => (
               <button
@@ -485,7 +494,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
           </div>
           {colorStore.recentFillColors.length > 0 && (
             <div className="props-color-extra-row">
-              <span className="props-mini-label">近期</span>
+              <span className="props-mini-label">{t("props.recent")}</span>
               {colorStore.recentFillColors.map((c) => (
                 <button
                   key={`recent-fill-${c}`}
@@ -495,7 +504,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
                   title={c}
                 />
               ))}
-              <button className="props-mini-clear" onClick={() => colorStore.clearRecentFill()} title="清空近期">✕</button>
+              <button className="props-mini-clear" onClick={() => colorStore.clearRecentFill()} title={t("props.clearRecent")}>x</button>
             </div>
           )}
         </div>
@@ -504,14 +513,14 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* 3. Fill style — only when fill is not transparent */}
       {(isShape || selectedIsShape || showTextBorderControls) && hasFill && (
         <div className="props-section">
-          <div className="props-label">填充</div>
+          <div className="props-label">{t("props.fill")}</div>
           <div className="props-btn-row">
             {FILL_STYLE_VALUES.map((fs) => (
               <button
                 key={fs}
                 className={`props-icon-btn ${(currentStyle.fillStyle || "hachure") === fs ? "active" : ""}`}
                 onClick={() => setStyleProp("fillStyle", fs)}
-                title={fs === "hachure" ? "斜线" : fs === "cross-hatch" ? "交叉线" : "实心"}
+                title={fs === "hachure" ? t("props.hachure") : fs === "cross-hatch" ? t("props.crossHatch") : t("props.solidFill")}
               >
                 <FillStyleIcon type={fs} />
               </button>
@@ -523,7 +532,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* 4. Stroke width — 3 tiers (hidden for text without border) */}
       {((isDrawing || hasSelection) && !isTextContext) || showTextBorderControls ? (
         <div className="props-section">
-          <div className="props-label">描边宽度</div>
+          <div className="props-label">{t("props.strokeWidth")}</div>
           <div className="props-btn-row">
             {STROKE_WIDTHS.map((w) => (
               <button
@@ -555,7 +564,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* Font family & size — text tool or selected text */}
       {isTextContext && (
         <div className="props-section">
-          <div className="props-label">字体</div>
+          <div className="props-label">{t("props.font")}</div>
           <select
             className="props-font-select"
             value={isText ? state.textFontFamily : (selectedEl as import("../types/elements").TextElement)?.fontFamily || "sans-serif"}
@@ -585,7 +594,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
           >
             {FONT_PRESETS.map((f) => (
               <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>
-                {f.label}
+                {fontLabel(f.value)}
               </option>
             ))}
           </select>
@@ -594,7 +603,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
 
       {isTextContext && (
         <div className="props-section">
-          <div className="props-label">字号</div>
+          <div className="props-label">{t("props.fontSize")}</div>
           <select
             className="props-font-select props-font-size"
             value={isText ? state.textFontSize : (selectedEl as import("../types/elements").TextElement)?.fontSize || 20}
@@ -632,7 +641,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* Font for mindmap nodes */}
       {(selectedIsMindmapNode || isMindmap) && (
         <div className="props-section">
-          <div className="props-label">字体</div>
+          <div className="props-label">{t("props.font")}</div>
           <select
             className="props-font-select"
             value={selectedIsMindmapNode ? (selectedEl as import("../types/elements").MindMapNodeElement).fontFamily || "sans-serif" : "sans-serif"}
@@ -650,7 +659,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
           >
             {FONT_PRESETS.map((f) => (
               <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>
-                {f.label}
+                {fontLabel(f.value)}
               </option>
             ))}
           </select>
@@ -659,7 +668,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
 
       {(selectedIsMindmapNode || isMindmap) && (
         <div className="props-section">
-          <div className="props-label">字号</div>
+          <div className="props-label">{t("props.fontSize")}</div>
           <select
             className="props-font-select props-font-size"
             value={selectedIsMindmapNode ? (selectedEl as import("../types/elements").MindMapNodeElement).fontSize || 16 : 16}
@@ -683,7 +692,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
 
       {(selectedIsMindmapNode || isMindmap) && (
         <div className="props-section">
-          <div className="props-label">字体颜色</div>
+          <div className="props-label">{t("props.fontColor")}</div>
           <div className="props-color-row">
             {["#1e1e1e", "#e03131", "#2f9e44", "#1971c2", "#f08c00", "#9c36b5", "#ffffff", "#868e96"].map((c) => (
               <button
@@ -710,7 +719,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* 5. Border style (dash) — for roughjs tools + text with border */}
       {(showDashAndRoughness || showTextBorderControls) && (
         <div className="props-section">
-          <div className="props-label">{(isPenContext || activeTool === "line" || activeTool === "arrow" || (hasSingleSelection && selectedEl && ["pen", "line", "arrow"].includes(selectedEl.type))) ? "线条样式" : "边框样式"}</div>
+          <div className="props-label">{(isPenContext || activeTool === "line" || activeTool === "arrow" || (hasSingleSelection && selectedEl && ["pen", "line", "arrow"].includes(selectedEl.type))) ? t("props.lineStyle") : t("props.borderStyle")}</div>
           <div className="props-btn-row">
             {DASH_VALUES.map((d, i) => {
               const currentDash = currentStyle.strokeDasharray || [];
@@ -725,7 +734,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
                       dispatch({ type: "UPDATE_ELEMENT", id: selectedEl.id, updates: { _roughDrawable: undefined } as Partial<import("../types/elements").WhiteboardElement> });
                     }
                   }}
-                  title={d.length === 0 ? "实线" : d[0] > 4 ? "虚线" : "点线"}
+                  title={d.length === 0 ? t("props.solid") : d[0] > 4 ? t("props.dashed") : t("props.dotted")}
                 >
                   <DashIcon dash={d} />
                 </button>
@@ -738,7 +747,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* 6. Line style (roughness) — for roughjs tools + text with border */}
       {(showDashAndRoughness || showTextBorderControls) && (
         <div className="props-section">
-          <div className="props-label">线条风格</div>
+          <div className="props-label">{t("props.lineStyle")}</div>
           <div className="props-btn-row">
             {ROUGHNESS_VALUES.map((r) => (
               <button
@@ -750,7 +759,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
                     dispatch({ type: "UPDATE_ELEMENT", id: selectedEl.id, updates: { _roughDrawable: undefined } as Partial<import("../types/elements").WhiteboardElement> });
                   }
                 }}
-                title={r === 0 ? "建筑师" : r === 1 ? "艺术家" : "漫画家"}
+                title={r === 0 ? t("props.architect") : r === 1 ? t("props.artist") : t("props.cartoonist")}
               >
                 <RoughnessIcon roughness={r} />
               </button>
@@ -762,7 +771,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* 7. Corner radius — rectangle or text with border */}
       {(isRect || showTextBorderControls) && (
         <div className="props-section">
-          <div className="props-label">边角</div>
+          <div className="props-label">{t("props.corner")}</div>
           <div className="props-btn-row">
             <button
               className={`props-icon-btn ${(currentStyle.cornerRadius || 0) === 0 ? "active" : ""}`}
@@ -772,7 +781,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
                   dispatch({ type: "UPDATE_ELEMENT", id: selectedEl.id, updates: { _roughDrawable: undefined } as Partial<import("../types/elements").WhiteboardElement> });
                 }
               }}
-              title="直角"
+              title={t("recording.squareCorner")}
             >
               <CornerIcon rounded={false} />
             </button>
@@ -784,7 +793,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
                   dispatch({ type: "UPDATE_ELEMENT", id: selectedEl.id, updates: { _roughDrawable: undefined } as Partial<import("../types/elements").WhiteboardElement> });
                 }
               }}
-              title="圆角"
+              title={t("recording.roundCorner")}
             >
               <CornerIcon rounded={true} />
             </button>
@@ -797,7 +806,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* 8. Opacity */}
       {(isDrawing || hasSelection) && (
         <div className="props-section">
-          <div className="props-label">透明度</div>
+          <div className="props-label">{t("props.opacity")}</div>
           <input
             type="range"
             className="props-slider"
@@ -816,31 +825,31 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* Eraser mode */}
       {isEraser && (
         <div className="props-section">
-          <div className="props-label">橡皮模式</div>
+          <div className="props-label">{t("props.eraserMode")}</div>
           <div className="props-btn-row">
             <button
               className={`props-icon-btn wide ${eraserMode === "stroke" ? "active" : ""}`}
               onClick={() => setEraserMode("stroke")}
-              title="涂抹"
+              title={t("props.smudge")}
             >
               <EraserModeIcon mode="stroke" />
-              <span className="props-icon-label">涂抹</span>
+              <span className="props-icon-label">{t("props.smudge")}</span>
             </button>
             <button
               className={`props-icon-btn wide ${eraserMode === "area" ? "active" : ""}`}
               onClick={() => setEraserMode("area")}
-              title="框选"
+              title={t("props.area")}
             >
               <EraserModeIcon mode="area" />
-              <span className="props-icon-label">框选</span>
+              <span className="props-icon-label">{t("props.area")}</span>
             </button>
             <button
               className={`props-icon-btn wide ${eraserMode === "pixel" ? "active" : ""}`}
               onClick={() => setEraserMode("pixel")}
-              title="像素"
+              title={t("props.pixel")}
             >
               <EraserModeIcon mode="pixel" />
-              <span className="props-icon-label">像素</span>
+              <span className="props-icon-label">{t("props.pixel")}</span>
             </button>
           </div>
         </div>
@@ -849,7 +858,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* Pixel eraser size */}
       {isEraser && eraserMode === "pixel" && (
         <div className="props-section">
-          <div className="props-label">笔刷大小: {eraserSize}px</div>
+          <div className="props-label">{t("props.brushSize")}: {eraserSize}px</div>
           <input
             type="range"
             className="props-slider"
@@ -860,8 +869,8 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
             onChange={(e) => setEraserSize(Number(e.target.value))}
           />
           <div className="props-range-labels">
-            <span>细</span>
-            <span>粗</span>
+            <span>{t("props.thin")}</span>
+            <span>{t("props.thick")}</span>
           </div>
         </div>
       )}
@@ -869,7 +878,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* Laser duration */}
       {isLaser && (
         <div className="props-section">
-          <div className="props-label">拖尾时长: {(laserDuration / 1000).toFixed(1)}s</div>
+          <div className="props-label">{t("props.trailDuration")}: {(laserDuration / 1000).toFixed(1)}s</div>
           <input
             type="range"
             className="props-slider"
@@ -880,8 +889,8 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
             onChange={(e) => setLaserDuration(Number(e.target.value))}
           />
           <div className="props-range-labels">
-            <span>短</span>
-            <span>长</span>
+            <span>{t("common.short")}</span>
+            <span>{t("common.long")}</span>
           </div>
         </div>
       )}
@@ -889,14 +898,14 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {/* 9. Layer order — single selected only */}
       {hasSingleSelection && selectedEl && (
         <div className="props-section">
-          <div className="props-label">图层</div>
+          <div className="props-label">{t("props.layers")}</div>
           <div className="props-btn-row props-layer-row">
             {(["back", "backward", "forward", "front"] as const).map((dir) => (
               <button
                 key={dir}
                 className="props-icon-btn"
                 onClick={() => reorderElement(selectedEl.id, dir)}
-                title={dir === "back" ? "置底" : dir === "backward" ? "下移" : dir === "forward" ? "上移" : "置顶"}
+                title={dir === "back" ? t("props.sendToBack") : dir === "backward" ? t("props.sendBackward") : dir === "forward" ? t("props.bringForward") : t("props.bringToFront")}
               >
                 <LayerIcon direction={dir} />
               </button>
@@ -909,20 +918,20 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
       {hasSelection && (
         <div className="props-section">
           <div className="props-label">
-            {selectedEls.length > 1 ? `选中 ${selectedEls.length} 个元素` : "操作"}
+            {selectedEls.length > 1 ? t("props.selectedCount", { count: selectedEls.length }) : t("props.actions")}
           </div>
           <div className="props-btn-row">
             {hasSingleSelection && selectedEl && (
               <button
                 className="props-icon-btn wide"
                 onClick={() => duplicateElement(selectedEl.id)}
-                title="复制"
+                title={t("props.copy")}
               >
                 <svg width={16} height={16} viewBox="0 0 16 16">
                   <rect x={4} y={1} width={9} height={11} rx={1.5} fill="none" stroke="currentColor" strokeWidth={1.3} />
                   <rect x={2} y={4} width={9} height={11} rx={1.5} fill="none" stroke="currentColor" strokeWidth={1.3} />
                 </svg>
-                <span className="props-icon-label">复制</span>
+                <span className="props-icon-label">{t("props.copy")}</span>
               </button>
             )}
             <button
@@ -941,14 +950,14 @@ export const PropertiesPanel = memo(function PropertiesPanel({ collapsed, style 
                 }
                 dispatch({ type: "DELETE_ELEMENTS", ids: allIdsToDelete });
               }}
-              title="删除"
+              title={t("props.delete")}
             >
               <svg width={16} height={16} viewBox="0 0 16 16">
                 <path d="M3,4 L4,14 Q4,15 5,15 L11,15 Q12,15 12,14 L13,4" fill="none" stroke="currentColor" strokeWidth={1.3} />
                 <line x1={2} y1={4} x2={14} y2={4} stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" />
                 <path d="M6,4 L6,2.5 Q6,2 6.5,2 L9.5,2 Q10,2 10,2.5 L10,4" fill="none" stroke="currentColor" strokeWidth={1.2} />
               </svg>
-              <span className="props-icon-label">删除</span>
+              <span className="props-icon-label">{t("props.delete")}</span>
             </button>
           </div>
         </div>

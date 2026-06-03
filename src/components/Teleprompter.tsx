@@ -1,10 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useI18n } from "../i18n";
 
 interface TeleprompterProps {
   onClose: () => void;
 }
 
 export function Teleprompter({ onClose }: TeleprompterProps) {
+  const { t } = useI18n();
   const [text, setText] = useState(() => {
     try {
       return localStorage.getItem("wb-teleprompter-text") || "";
@@ -168,16 +170,16 @@ export function Teleprompter({ onClose }: TeleprompterProps) {
     >
       {/* Title bar */}
       <div className="teleprompter-titlebar" onPointerDown={onDragStart}>
-        <span className="teleprompter-title">{iconClipboard} 提词器</span>
+        <span className="teleprompter-title">{iconClipboard} {t("app.teleprompter")}</span>
         <div className="teleprompter-titlebar-actions">
           <button
             className="teleprompter-btn"
             onClick={() => setMinimized(!minimized)}
-            title={minimized ? "展开" : "最小化"}
+            title={minimized ? t("teleprompter.expand") : t("teleprompter.minimize")}
           >
             {minimized ? iconExpand : iconMinimize}
           </button>
-          <button className="teleprompter-btn teleprompter-close-btn" onClick={onClose} title="关闭">
+          <button className="teleprompter-btn teleprompter-close-btn" onClick={onClose} title={t("common.close")}>
             {iconClose}
           </button>
         </div>
@@ -191,7 +193,7 @@ export function Teleprompter({ onClose }: TeleprompterProps) {
             style={{ fontSize }}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="在此输入提词内容..."
+            placeholder={t("teleprompter.placeholder")}
           />
 
           {/* Compact controls bar */}
@@ -200,19 +202,19 @@ export function Teleprompter({ onClose }: TeleprompterProps) {
               <button
                 className={`teleprompter-play-btn ${isPlaying ? "playing" : ""}`}
                 onClick={togglePlay}
-                title={isPlaying ? "暂停" : "播放"}
+                title={isPlaying ? t("teleprompter.pause") : t("teleprompter.play")}
               >
                 {isPlaying ? iconPause : iconPlay}
               </button>
               <button
                 className="teleprompter-stop-btn"
                 onClick={handleStop}
-                title="停止并回到开头"
+                title={t("teleprompter.stopTop")}
               >
                 {iconStop}
               </button>
               <div className="teleprompter-speed-inline">
-                <span className="teleprompter-speed-label">速度</span>
+                <span className="teleprompter-speed-label">{t("teleprompter.speed")}</span>
                 <input
                   type="range"
                   min={1}
@@ -226,7 +228,7 @@ export function Teleprompter({ onClose }: TeleprompterProps) {
             </div>
 
             <div className="teleprompter-settings-row">
-              <label className="teleprompter-label">字号</label>
+              <label className="teleprompter-label">{t("teleprompter.fontSize")}</label>
               <input
                 type="range"
                 min={12}
@@ -237,7 +239,7 @@ export function Teleprompter({ onClose }: TeleprompterProps) {
               />
               <span className="teleprompter-value">{fontSize}</span>
               <span className="teleprompter-sep">|</span>
-              <label className="teleprompter-label">透明</label>
+              <label className="teleprompter-label">{t("teleprompter.opacity")}</label>
               <input
                 type="range"
                 min={20}

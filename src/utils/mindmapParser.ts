@@ -2,6 +2,7 @@
  * Mind map file parser — converts .xmind, .mm (FreeMind), .opml to Markdown.
  */
 import JSZip from "jszip";
+import { translateNow } from "../i18n";
 
 // ---- Internal tree structure ----
 interface MindNode {
@@ -37,7 +38,7 @@ async function parseXMind(buffer: ArrayBuffer): Promise<MindNode> {
     return { title: meta.title || "XMind", children: [] };
   }
 
-  return { title: "无法解析的 XMind 文件", children: [] };
+  return { title: translateNow("mindmap.parseXMindFailed"), children: [] };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,7 +67,7 @@ function parseFreeMind(xmlText: string): MindNode {
   const doc = parser.parseFromString(xmlText, "text/xml");
   const rootNode = doc.querySelector("map > node");
   if (!rootNode) {
-    return { title: "无法解析的 FreeMind 文件", children: [] };
+    return { title: translateNow("mindmap.parseFreeMindFailed"), children: [] };
   }
   return convertMMNode(rootNode);
 }
@@ -190,7 +191,7 @@ export async function parseMindMapToMarkdown(
       break;
     }
     default:
-      return "# 不支持的文件格式\n\n无法解析该文件。";
+      return `# ${translateNow("mindmap.unsupportedFormatTitle")}\n\n${translateNow("mindmap.unsupportedFormatBody")}`;
   }
 
   return treeToMarkdown(tree);

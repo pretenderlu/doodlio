@@ -127,6 +127,18 @@
   border-color: #1a73e8;
 }
 
+.hmenu-language-select {
+  width: calc(100% - 24px);
+  margin: 4px 12px 8px;
+  padding: 7px 28px 7px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 
 /* Help sub-panel */
 .hamburger-help {
@@ -195,4 +207,3 @@
   min-width: 32px;
   text-align: center;
 }
-

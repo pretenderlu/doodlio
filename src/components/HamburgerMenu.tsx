@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useWhiteboard } from "../hooks/useElements";
 import { ColorPickerButton } from "./ColorPickerButton";
+import { useI18n } from "../i18n";
 
 const CANVAS_BG_COLORS = [
   "#ffffff", "#f8f9fa", "#fff3bf", "#d3f9d8", "#d0ebff", "#f3d9fa", "#ffe8cc",
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function HamburgerMenu({ canvasBg, onCanvasBgChange, onOpenFile, onSaveFile, onExportImage, onExportSvg }: Props) {
+  const { t, preference, setPreference } = useI18n();
   const [open, setOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -46,7 +48,7 @@ export function HamburgerMenu({ canvasBg, onCanvasBgChange, onOpenFile, onSaveFi
       <button
         className="hamburger-btn"
         onClick={() => { setOpen(!open); setShowHelp(false); }}
-        title="菜单"
+        title={t("common.menu")}
       >
         <svg width={18} height={18} viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
           <line x1="3" y1="4.5" x2="15" y2="4.5" />
@@ -62,7 +64,7 @@ export function HamburgerMenu({ canvasBg, onCanvasBgChange, onOpenFile, onSaveFi
                 <path d="M2 13V3a1 1 0 011-1h4l2 2h4a1 1 0 011 1v8a1 1 0 01-1 1H3a1 1 0 01-1-1z" />
               </svg>
             </span>
-            <span className="hmenu-text">打开</span>
+            <span className="hmenu-text">{t("common.open")}</span>
             <span className="hmenu-shortcut">Ctrl+O</span>
           </button>
           <button className="hmenu-item" onClick={() => { setOpen(false); onSaveFile(); }}>
@@ -73,7 +75,7 @@ export function HamburgerMenu({ canvasBg, onCanvasBgChange, onOpenFile, onSaveFi
                 <path d="M5 2v3h5" />
               </svg>
             </span>
-            <span className="hmenu-text">保存到...</span>
+            <span className="hmenu-text">{t("common.saveTo")}</span>
             <span className="hmenu-shortcut">Ctrl+S</span>
           </button>
           <button className="hmenu-item" onClick={() => { setOpen(false); onExportImage(); }}>
@@ -84,7 +86,7 @@ export function HamburgerMenu({ canvasBg, onCanvasBgChange, onOpenFile, onSaveFi
                 <polyline points="5 5 8 2 11 5" />
               </svg>
             </span>
-            <span className="hmenu-text">导出图片...</span>
+            <span className="hmenu-text">{t("common.exportImage")}</span>
             <span className="hmenu-shortcut">Ctrl+Shift+E</span>
           </button>
           {onExportSvg && (
@@ -96,7 +98,7 @@ export function HamburgerMenu({ canvasBg, onCanvasBgChange, onOpenFile, onSaveFi
                   <polyline points="5 5 8 2 11 5" />
                 </svg>
               </span>
-              <span className="hmenu-text">导出 SVG...</span>
+              <span className="hmenu-text">{t("common.exportSvg")}</span>
               <span className="hmenu-shortcut">Ctrl+Shift+S</span>
             </button>
           )}
@@ -112,7 +114,7 @@ export function HamburgerMenu({ canvasBg, onCanvasBgChange, onOpenFile, onSaveFi
                 <path d="M12.5 4l-.7 9.1a1 1 0 01-1 .9H5.2a1 1 0 01-1-.9L3.5 4" />
               </svg>
             </span>
-            <span className="hmenu-text">重置画布</span>
+            <span className="hmenu-text">{t("common.resetCanvas")}</span>
           </button>
           <button className="hmenu-item" onClick={() => setShowHelp(true)}>
             <span className="hmenu-icon">
@@ -122,11 +124,11 @@ export function HamburgerMenu({ canvasBg, onCanvasBgChange, onOpenFile, onSaveFi
                 <circle cx="8" cy="11.5" r="0.5" fill="#555" stroke="none" />
               </svg>
             </span>
-            <span className="hmenu-text">帮助</span>
+            <span className="hmenu-text">{t("common.help")}</span>
             <span className="hmenu-shortcut">?</span>
           </button>
           <div className="hmenu-divider" />
-          <div className="hmenu-label">画布背景</div>
+          <div className="hmenu-label">{t("hamburger.canvasBg")}</div>
           <div className="hmenu-bg-row">
             {CANVAS_BG_COLORS.map((c) => (
               <button
@@ -141,6 +143,17 @@ export function HamburgerMenu({ canvasBg, onCanvasBgChange, onOpenFile, onSaveFi
               onChange={(c) => onCanvasBgChange(c)}
             />
           </div>
+          <div className="hmenu-divider" />
+          <div className="hmenu-label">{t("language.setting")}</div>
+          <select
+            className="hmenu-language-select"
+            value={preference}
+            onChange={(event) => setPreference(event.target.value as typeof preference)}
+          >
+            <option value="auto">{t("language.auto")}</option>
+            <option value="zh-CN">{t("language.zh")}</option>
+            <option value="en">{t("language.en")}</option>
+          </select>
         </div>
       )}
       {open && showHelp && (
@@ -151,33 +164,33 @@ export function HamburgerMenu({ canvasBg, onCanvasBgChange, onOpenFile, onSaveFi
                 <polyline points="9 2 4 7 9 12" />
               </svg>
             </button>
-            <span className="hmenu-help-title">快捷键</span>
+            <span className="hmenu-help-title">{t("hamburger.shortcuts")}</span>
           </div>
           <div className="hmenu-help-list">
             {[
-              ["V / 1", "选择"],
-              ["P / 2", "画笔"],
-              ["H", "荧光笔"],
-              ["G", "激光笔"],
-              ["L / 3", "直线"],
-              ["R / 4", "矩形"],
-              ["O / 5", "椭圆"],
-              ["A / 6", "箭头"],
-              ["T / 7", "文字"],
-              ["E / 8", "橡皮擦"],
-              ["M / 9", "脑图"],
-              ["Ctrl+Z", "撤销"],
-              ["Ctrl+Shift+Z", "重做"],
-              ["[ / ]", "描边宽度 -/+"],
-              ["Delete", "删除选中"],
-              ["Ctrl+O", "打开文件"],
-              ["Ctrl+S", "保存"],
-              ["Ctrl+Shift+E", "导出图片"],
-              ["Ctrl+Shift+S", "导出 SVG"],
-              ["Ctrl+C / V", "复制 / 粘贴"],
-              ["Ctrl+D", "复制选中"],
-              ["Ctrl+G", "分组"],
-              ["Ctrl+Shift+G", "取消分组"],
+              ["V / 1", t("tool.select")],
+              ["P / 2", t("tool.pen")],
+              ["H", t("tool.highlighter")],
+              ["G", t("tool.laser")],
+              ["L / 3", t("tool.line")],
+              ["R / 4", t("tool.rectangle")],
+              ["O / 5", t("tool.ellipse")],
+              ["A / 6", t("tool.arrow")],
+              ["T / 7", t("tool.text")],
+              ["E / 8", t("tool.eraser")],
+              ["M / 9", t("tool.mindmap")],
+              ["Ctrl+Z", t("tool.undo")],
+              ["Ctrl+Shift+Z", t("tool.redo")],
+              ["[ / ]", t("shortcut.strokeWidth")],
+              ["Delete", t("shortcut.deleteSelected")],
+              ["Ctrl+O", t("common.open")],
+              ["Ctrl+S", t("common.saveTo")],
+              ["Ctrl+Shift+E", t("common.exportImage")],
+              ["Ctrl+Shift+S", t("common.exportSvg")],
+              ["Ctrl+C / V", t("shortcut.copyPaste")],
+              ["Ctrl+D", t("shortcut.duplicateSelected")],
+              ["Ctrl+G", t("shortcut.group")],
+              ["Ctrl+Shift+G", t("shortcut.ungroup")],
             ].map(([key, desc]) => (
               <div key={key} className="hmenu-help-row">
                 <kbd className="hmenu-kbd">{key}</kbd>

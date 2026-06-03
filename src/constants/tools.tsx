@@ -1,4 +1,5 @@
 import type { EraserMode } from "../types/elements";
+import type { TranslationKey } from "../i18n";
 
 export interface ToolDef {
   key: string;
@@ -32,6 +33,10 @@ export const ACTION_ITEMS: ToolDef[] = [
 ];
 
 export const ALL_FAVORITABLE = [...TOOLS, ...ACTION_ITEMS];
+
+export function toolLabelKey(key: string): TranslationKey {
+  return `tool.${key}` as TranslationKey;
+}
 
 // ── Minimalist SVG icons (1.5px stroke, no fill) ──
 const S = 20; // viewBox size

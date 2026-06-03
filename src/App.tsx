@@ -10,7 +10,7 @@ import { useSlides } from "./hooks/useSlides";
 import { useAutoSave, loadAutoSave, clearAutoSave } from "./hooks/useAutoSave";
 import { Canvas } from "./components/Canvas";
 import { Toolbar } from "./components/Toolbar";
-import { ALL_FAVORITABLE, renderToolIcon } from "./constants/tools";
+import { ALL_FAVORITABLE, renderToolIcon, toolLabelKey } from "./constants/tools";
 import { timestampFilename } from "./utils/format";
 import { renderScene } from "./utils/renderer";
 import { FloatingToolbar, loadFavorites, saveFavorites } from "./components/FloatingToolbar";
@@ -31,6 +31,7 @@ import { detectMindMapFormat, parseMindMapToMarkdown } from "./utils/mindmapPars
 import { exportSvg } from "./utils/svgExport";
 import { LayerPanel } from "./components/LayerPanel";
 import { WelcomeGuide, useWelcomeGuide } from "./components/WelcomeGuide";
+import { useI18n } from "./i18n";
 import "./styles/index.css";
 
 const captureMenuItemStyle: React.CSSProperties = {
@@ -41,6 +42,7 @@ const captureMenuItemStyle: React.CSSProperties = {
 };
 
 function WhiteboardApp() {
+  const { t } = useI18n();
   useKeyboard();
   const { showWelcome, dismissWelcome } = useWelcomeGuide();
 
@@ -189,7 +191,7 @@ function WhiteboardApp() {
             content = await parseMindMapToMarkdown(file);
           } catch (err) {
             console.error("解析脑图失败:", err);
-            content = `# 解析失败\n\n文件 \`${file.name}\` 无法解析。`;
+            content = `# ${t("app.mindmapParseFailedTitle")}\n\n${t("app.mindmapParseFailedBody", { file: file.name })}`;
           }
         } else {
           content = await file.text();
@@ -277,10 +279,10 @@ function WhiteboardApp() {
             slides.clearSlides();
           }
         } else {
-          alert("文件格式错误，无法打开");
+          alert(t("app.fileFormatError"));
         }
       } catch {
-        alert("文件格式错误，无法打开");
+        alert(t("app.fileFormatError"));
       }
     };
     input.click();
@@ -436,10 +438,10 @@ function WhiteboardApp() {
         if (ctxMenu.source === "toolbar") {
           const isFav = favorites.includes(ctxMenu.toolKey);
           return isFav
-            ? [{ label: `从浮动栏移除「${def.label}」`, onClick: () => removeFromFavorites(ctxMenu.toolKey) }]
-            : [{ label: `添加「${def.label}」到浮动栏`, onClick: () => addToFavorites(ctxMenu.toolKey) }];
+            ? [{ label: t("app.removeFromFloating", { label: t(toolLabelKey(def.key)) }), onClick: () => removeFromFavorites(ctxMenu.toolKey) }]
+            : [{ label: t("app.addToFloating", { label: t(toolLabelKey(def.key)) }), onClick: () => addToFavorites(ctxMenu.toolKey) }];
         } else {
-          return [{ label: `从浮动栏移除「${def.label}」`, onClick: () => removeFromFavorites(ctxMenu.toolKey), danger: true }];
+          return [{ label: t("app.removeFromFloating", { label: t(toolLabelKey(def.key)) }), onClick: () => removeFromFavorites(ctxMenu.toolKey), danger: true }];
         }
       })()
     : [];
@@ -464,21 +466,21 @@ function WhiteboardApp() {
             <button
               className={`tool-btn ${showLayerPanel ? 'active' : ''}`}
               onClick={() => setShowLayerPanel(!showLayerPanel)}
-              data-tooltip="图层"
+              data-tooltip={t("app.layers")}
             >
               {renderToolIcon("layers", "tool-icon")}
             </button>
             <button
               className={`tool-btn ${showSlidesPanel ? 'active' : ''}`}
               onClick={() => setShowSlidesPanel(!showSlidesPanel)}
-              data-tooltip="幻灯片"
+              data-tooltip={t("app.slides")}
             >
               {renderToolIcon("slides", "tool-icon")}
             </button>
             <button
               className={`tool-btn ${mdPanels.length > 0 ? 'active' : ''}`}
               onClick={handleOpenMarkdown}
-              title="打开 Markdown / 脑图文件"
+              title={t("app.openMarkdown")}
             >
               {renderToolIcon("markdown", "tool-icon")}
               {mdPanels.length > 0 && (
@@ -494,7 +496,7 @@ function WhiteboardApp() {
             <button
               className={`tool-btn ${showTeleprompter ? 'active' : ''}`}
               onClick={() => setShowTeleprompter(!showTeleprompter)}
-              title="提词器"
+              title={t("app.teleprompter")}
             >
               {renderToolIcon("teleprompter", "tool-icon")}
             </button>
@@ -503,7 +505,7 @@ function WhiteboardApp() {
               <button
                 className={`tool-btn ${capture.sources.length > 0 ? 'active' : ''}`}
                 onClick={() => setShowCaptureMenu(!showCaptureMenu)}
-                title="采集源"
+                title={t("app.capture")}
               >
                 {renderToolIcon("capture", "tool-icon")}
                 {capture.sources.length > 0 && (
@@ -525,18 +527,18 @@ function WhiteboardApp() {
                   minWidth: 220, padding: '6px 0',
                   zIndex: 9999, fontSize: 13,
                 }}>
-                  <div style={{ padding: '6px 14px', fontWeight: 600, fontSize: 12, color: '#888', letterSpacing: 0.5 }}>添加采集</div>
+                  <div style={{ padding: '6px 14px', fontWeight: 600, fontSize: 12, color: '#888', letterSpacing: 0.5 }}>{t("app.addCapture")}</div>
                   <button
                     className="capture-menu-item"
                     disabled={capture.isFull}
                     onClick={() => { capture.addScreenCapture(); setShowCaptureMenu(false); }}
                     style={captureMenuItemStyle}
                   >
-                    <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="16" height="11" rx="2" /><line x1="7" y1="17" x2="13" y2="17" /><line x1="10" y1="14" x2="10" y2="17" /></svg> 屏幕 / 窗口 / 标签页
+                    <svg width={14} height={14} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="16" height="11" rx="2" /><line x1="7" y1="17" x2="13" y2="17" /><line x1="10" y1="14" x2="10" y2="17" /></svg> {t("app.screenCapture")}
                   </button>
                   {captureDeviceList.length > 0 && (
                     <>
-                      <div style={{ padding: '6px 14px 2px', fontWeight: 600, fontSize: 12, color: '#888', letterSpacing: 0.5, marginTop: 4 }}>设备采集</div>
+                      <div style={{ padding: '6px 14px 2px', fontWeight: 600, fontSize: 12, color: '#888', letterSpacing: 0.5, marginTop: 4 }}>{t("app.deviceCapture")}</div>
                       {captureDeviceList.map((d) => (
                         <button
                           key={d.deviceId}
@@ -553,7 +555,7 @@ function WhiteboardApp() {
                   {capture.sources.length > 0 && (
                     <>
                       <div style={{ height: 1, background: '#eee', margin: '6px 10px' }} />
-                      <div style={{ padding: '4px 14px', fontWeight: 600, fontSize: 12, color: '#888', letterSpacing: 0.5 }}>当前采集 ({capture.sources.length}/4)</div>
+                      <div style={{ padding: '4px 14px', fontWeight: 600, fontSize: 12, color: '#888', letterSpacing: 0.5 }}>{t("app.currentCapture", { count: capture.sources.length })}</div>
                       {capture.sources.map((s) => (
                         <button
                           key={s.id}
@@ -563,13 +565,13 @@ function WhiteboardApp() {
                         >
                           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4cd964', display: 'inline-block' }} />
                           <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.label}</span>
-                          <span style={{ color: '#e03131', fontSize: 11, flexShrink: 0 }}>✕ 关闭</span>
+                          <span style={{ color: '#e03131', fontSize: 11, flexShrink: 0 }}>x {t("common.close")}</span>
                         </button>
                       ))}
                     </>
                   )}
                   {capture.isFull && (
-                    <div style={{ padding: '4px 14px', fontSize: 11, color: '#e03131' }}>已达最大数量 (4)</div>
+                    <div style={{ padding: '4px 14px', fontSize: 11, color: '#e03131' }}>{t("app.maxCaptureReached")}</div>
                   )}
                 </div>
               )}
@@ -578,7 +580,7 @@ function WhiteboardApp() {
             <button
               className="tool-btn settings-btn"
               onClick={() => setShowSetupModal(true)}
-              title="录制设置"
+              title={t("app.recordingSettings")}
             >
               {renderToolIcon("settings", "tool-icon")}
             </button>
@@ -610,14 +612,14 @@ function WhiteboardApp() {
                   onClick={() => { setShowLayerPanel(!showLayerPanel); setShowMobileMore(false); }}
                 >
                   {renderToolIcon("layers", "tool-icon")}
-                  <span>图层</span>
+                  <span>{t("app.layers")}</span>
                 </button>
                 <button
                   className={`mobile-more-item ${showSlidesPanel ? 'active' : ''}`}
                   onClick={() => { setShowSlidesPanel(!showSlidesPanel); setShowMobileMore(false); }}
                 >
                   {renderToolIcon("slides", "tool-icon")}
-                  <span>幻灯片</span>
+                  <span>{t("app.slides")}</span>
                 </button>
                 <button
                   className={`mobile-more-item ${mdPanels.length > 0 ? 'active' : ''}`}
@@ -631,7 +633,7 @@ function WhiteboardApp() {
                   onClick={() => { setShowTeleprompter(!showTeleprompter); setShowMobileMore(false); }}
                 >
                   {renderToolIcon("teleprompter", "tool-icon")}
-                  <span>提词器</span>
+                  <span>{t("app.teleprompter")}</span>
                 </button>
                 <div style={{ height: 1, background: '#eee', margin: '4px 10px' }} />
                 <button
@@ -639,7 +641,7 @@ function WhiteboardApp() {
                   onClick={() => { setShowSetupModal(true); setShowMobileMore(false); }}
                 >
                   {renderToolIcon("settings", "tool-icon")}
-                  <span>录制设置</span>
+                  <span>{t("app.recordingSettings")}</span>
                 </button>
                 <button
                   className={`mobile-more-item ${isRecording ? 'active' : ''}`}
@@ -648,7 +650,7 @@ function WhiteboardApp() {
                   <span className="tool-icon" style={{ color: isRecording ? '#e03131' : undefined }}>
                     {isRecording ? '⏹' : '⏺'}
                   </span>
-                  <span>{isRecording ? '停止录制' : '开始录制'}</span>
+                  <span>{isRecording ? t("app.stopRecording") : t("app.startRecording")}</span>
                 </button>
               </div>
             )}
@@ -672,7 +674,7 @@ function WhiteboardApp() {
             onSaveAsSlide={() => {
               const visibleElements = wbState.elements.filter((el) => !el.isDeleted);
               if (visibleElements.length === 0) {
-                alert("画板为空，请先绘制内容再保存为幻灯片");
+                alert(t("app.emptySlideWarn"));
                 return;
               }
               slides.saveAsSlide(wbState.elements);

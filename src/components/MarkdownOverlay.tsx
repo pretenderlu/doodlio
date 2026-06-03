@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { marked } from "marked";
+import { useI18n } from "../i18n";
 
 interface Position {
   x: number;
@@ -30,6 +31,7 @@ export function MarkdownOverlay({
   onClose,
   stackIndex = 0,
 }: MarkdownOverlayProps) {
+  const { t } = useI18n();
   const rootRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<Position>({ x: -1, y: -1 });
@@ -250,7 +252,7 @@ export function MarkdownOverlay({
           onClick={(e) => { e.stopPropagation(); zoomOut(); }}
           onPointerDown={(e) => e.stopPropagation()}
           style={controlBtnStyle}
-          title="缩小字体"
+          title={t("markdown.fontSmaller")}
         >
           A-
         </button>
@@ -269,7 +271,7 @@ export function MarkdownOverlay({
           onClick={(e) => { e.stopPropagation(); zoomIn(); }}
           onPointerDown={(e) => e.stopPropagation()}
           style={controlBtnStyle}
-          title="放大字体"
+          title={t("markdown.fontLarger")}
         >
           A+
         </button>
@@ -283,7 +285,7 @@ export function MarkdownOverlay({
             color: "#e03131",
             marginLeft: 4,
           }}
-          title="关闭"
+          title={t("common.close")}
         >
           ✕
         </button>

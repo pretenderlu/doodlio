@@ -7,6 +7,7 @@ import { useMindMap } from "../hooks/useMindMap";
 import { hitTest } from "../utils/hitTest";
 import { screenToWorld } from "../utils/coordinates";
 import { MIN_ZOOM, MAX_ZOOM } from "../types/viewport";
+import { useI18n } from "../i18n";
 
 interface PinchState {
   initialDist: number;
@@ -41,6 +42,7 @@ interface CanvasProps {
 }
 
 export const Canvas = memo(function Canvas({ aspectRatio, canvasBg = "#ffffff", laserCanvas, onInteract }: CanvasProps) {
+  const { t } = useI18n();
   const staticCanvas = useRef<HTMLCanvasElement>(null);
   const dynamicCanvas = useRef<HTMLCanvasElement>(null);
   const { state, resetViewport, zoomTo } = useWhiteboard();
@@ -231,7 +233,7 @@ export const Canvas = memo(function Canvas({ aspectRatio, canvasBg = "#ffffff", 
               const rect = canvas.getBoundingClientRect();
               zoomTo(Math.max(MIN_ZOOM, state.viewport.zoom / 1.2), rect.width / 2, rect.height / 2);
             }}
-            title="缩小"
+            title={t("canvas.zoomOut")}
           >
             −
           </button>
@@ -244,13 +246,13 @@ export const Canvas = memo(function Canvas({ aspectRatio, canvasBg = "#ffffff", 
               const rect = canvas.getBoundingClientRect();
               zoomTo(Math.min(MAX_ZOOM, state.viewport.zoom * 1.2), rect.width / 2, rect.height / 2);
             }}
-            title="放大"
+            title={t("canvas.zoomIn")}
           >
             +
           </button>
           {zoomPercent !== 100 && (
-            <button className="zoom-reset-btn" onClick={resetViewport} title="重置缩放">
-              重置
+            <button className="zoom-reset-btn" onClick={resetViewport} title={t("canvas.resetZoom")}>
+              {t("common.reset")}
             </button>
           )}
         </div>

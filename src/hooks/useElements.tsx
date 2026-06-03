@@ -12,6 +12,7 @@ import type {
 } from "../types/elements";
 import { DEFAULT_STYLE } from "../types/elements";
 import { DEFAULT_VIEWPORT, MIN_ZOOM, MAX_ZOOM } from "../types/viewport";
+import { translateNow } from "../i18n";
 
 const MAX_UNDO = 50;
 const DEFAULT_LAYER_ID = "layer-default";
@@ -32,7 +33,7 @@ const initialState: WhiteboardState = {
   textShowBorder: false,
   textFontColor: "#1e1e1e",
   penLineStyle: "default",
-  layers: [{ id: DEFAULT_LAYER_ID, name: "图层 1", visible: true, locked: false, order: 0 }],
+  layers: [{ id: DEFAULT_LAYER_ID, name: translateNow("layer.new", { index: 1 }), visible: true, locked: false, order: 0 }],
   activeLayerId: DEFAULT_LAYER_ID,
 };
 
