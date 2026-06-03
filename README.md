@@ -1,80 +1,81 @@
-# Doodlio 涂鸦板
+# Doodlio
 
-一款手绘风格的在线白板应用，支持录屏、思维导图、Markdown 演示，适用于教学演示和内容创作。
+[English](./README.md) | [简体中文](./README.zh-CN.md)
 
-## 功能亮点
+Doodlio is a hand-drawn online whiteboard for teaching, demos, visual thinking, and content creation. It brings together sketch-style drawing, mind maps, Markdown presentations, screen recording, camera capture, layers, and SVG export in a fast browser-based workspace.
 
-- **手绘风格绘图** — 画笔 / 荧光笔 / 直线 / 矩形 / 椭圆 / 箭头 / 文本，基于 rough.js 渲染
-- **思维导图** — 水平 / 垂直 / 径向三种自动布局
-- **Smart Zoom 录屏** — 鼠标操作时自动聚焦放大，静止后平滑回全景，灵感来自 Screen Studio
-- **多源采集** — 最多 4 路屏幕 / 摄像头同时采集合成
-- **Markdown 演示** — 浮动面板实时渲染，支持 XMind / FreeMind / OPML 脑图导入
-- **图层管理** — 创建图层，控制显示 / 隐藏 / 锁定
-- **SVG 导出** — 矢量导出，保留手绘风格
-- **对齐辅助线** — 拖拽时自动吸附对齐
-- **触屏适配** — 双指缩放，手写笔防误触
+## Highlights
 
-## 快速开始
+- **Hand-drawn canvas** - Pen, highlighter, line, rectangle, ellipse, arrow, and text tools rendered with rough.js.
+- **Mind maps** - Import and arrange ideas with horizontal, vertical, and radial layouts.
+- **Smart Zoom recording** - Automatically zooms into mouse activity while recording, then smoothly returns to the full view, inspired by Screen Studio.
+- **Multi-source capture** - Combine up to 4 screen or camera sources in one recording setup.
+- **Markdown presentations** - Render notes in a floating panel and import XMind, FreeMind, and OPML mind maps.
+- **Layer management** - Create layers and control visibility, locking, and organization.
+- **SVG export** - Export vector artwork while preserving the sketch-like visual style.
+- **Alignment guides** - Snap objects into place while dragging.
+- **Touch-friendly input** - Supports pinch zoom and stylus-friendly palm rejection.
+
+## Quick Start
 
 ```bash
 npm install
 npm run dev
 ```
 
-## 在线部署
+Then open the local URL shown in your terminal.
 
-Doodlio 是纯前端应用，可以一键部署到各大平台。仓库已内置所有平台的配置文件，**Fork 后直接连接即可，无需手动配置。**
+## Deployment
+
+Doodlio is a static frontend app and can be deployed to most modern hosting platforms. The repository includes ready-to-use deployment configuration, so you can fork it and connect it with minimal setup.
 
 ### Vercel
 
-1. 前往 [vercel.com](https://vercel.com)，使用 GitHub 登录
-2. 点击 **Add New → Project**
-3. 导入本仓库（`pretenderlu/doodlio`，或你 Fork 的仓库）
-4. Vercel 会自动识别 Vite 框架，保持默认设置即可
-5. 点击 **Deploy**，等待构建完成
-6. 部署完成后会获得一个 `*.vercel.app` 域名
+1. Go to [vercel.com](https://vercel.com) and sign in with GitHub.
+2. Click **Add New -> Project**.
+3. Import this repository, or your fork.
+4. Keep the default Vite settings.
+5. Click **Deploy**.
 
-> 每次 push 到 main 分支会自动触发重新部署。
+Vercel will redeploy automatically whenever you push to `main`.
 
 ### Netlify
 
-1. 前往 [app.netlify.com](https://app.netlify.com)，使用 GitHub 登录
-2. 点击 **Add new site → Import an existing project**
-3. 选择 GitHub，导入本仓库
-4. 构建设置会从 `netlify.toml` 自动读取，无需修改
-5. 点击 **Deploy site**
-6. 部署完成后会获得一个 `*.netlify.app` 域名
-
-> 支持自定义域名、表单收集、分支预览等功能。
+1. Go to [app.netlify.com](https://app.netlify.com) and sign in with GitHub.
+2. Click **Add new site -> Import an existing project**.
+3. Select this repository.
+4. Netlify reads the build settings from `netlify.toml`.
+5. Click **Deploy site**.
 
 ### Cloudflare Pages
 
-1. 前往 [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages**
-2. 点击 **Create → Pages → Connect to Git**
-3. 选择本仓库，设置：
+1. Open [dash.cloudflare.com](https://dash.cloudflare.com), then go to **Workers & Pages**.
+2. Click **Create -> Pages -> Connect to Git**.
+3. Select this repository.
+4. Use:
    - **Build command**: `npm run build`
    - **Build output directory**: `dist`
-4. 点击 **Save and Deploy**
-5. 部署完成后会获得一个 `*.pages.dev` 域名
-
-> Cloudflare Pages 提供免费无限带宽和全球边缘网络，访问速度极快。
+5. Click **Save and Deploy**.
 
 ### GitHub Pages
 
-1. 在仓库 **Settings → Pages → Source** 中选择 **GitHub Actions**
-2. 打开 `.github/workflows/deploy-pages.yml`，将触发条件改为 push 自动部署：
+1. In the repository settings, go to **Pages** and set **Source** to **GitHub Actions**.
+2. Open `.github/workflows/deploy-pages.yml` and enable deployment on push if desired:
+
    ```yaml
    on:
      push:
        branches: [main]
      workflow_dispatch:
    ```
-   > 默认仅支持手动触发（Actions 标签页 → Run workflow）。添加 `push` 后每次推送到 main 会自动部署。
-3. 修改 `vite.config.ts` 中的 `base` 为你的仓库名：
+
+3. If you deploy under a repository path, update `vite.config.ts`:
+
    ```ts
-   base: '/doodlio/',  // 改为你的仓库名
+   base: '/doodlio/'
    ```
-4. 部署完成后访问 `https://<username>.github.io/doodlio/`
+
+4. After deployment, visit `https://<username>.github.io/doodlio/`.
 
 ### Docker
 
@@ -82,40 +83,40 @@ Doodlio 是纯前端应用，可以一键部署到各大平台。仓库已内置
 docker compose up -d
 ```
 
-访问 `http://localhost:8080` 即可使用。
+Then visit `http://localhost:8080`.
 
-### 平台对比
+### Platform Comparison
 
-| 平台 | 费用 | 自动部署 | 自定义域名 | 特点 |
+| Platform | Cost | Automatic deploys | Custom domain | Notes |
 |---|---|---|---|---|
-| Vercel | 免费 | ✅ | ✅ | 零配置，Vite 原生支持 |
-| Netlify | 免费 | ✅ | ✅ | 分支预览，插件生态 |
-| Cloudflare Pages | 免费 | ✅ | ✅ | 无限带宽，全球边缘网络 |
-| GitHub Pages | 免费 | ✅ | ✅ | 无需第三方账号 |
-| Docker | 自建 | — | — | 完全可控，内网部署 |
+| Vercel | Free tier | Yes | Yes | Zero-config Vite support |
+| Netlify | Free tier | Yes | Yes | Branch previews and plugin ecosystem |
+| Cloudflare Pages | Free tier | Yes | Yes | Global edge network and generous bandwidth |
+| GitHub Pages | Free | Yes | Yes | Native GitHub integration |
+| Docker | Self-hosted | Manual | Yes | Full control for private or internal hosting |
 
-## 快捷键
+## Shortcuts
 
-| 快捷键 | 功能 |
+| Shortcut | Action |
 |---|---|
-| `V` `P` `L` `R` `O` `A` `T` `E` `M` | 工具切换 |
-| `Ctrl+C/V/D` | 复制 / 粘贴 / 快速复制 |
-| `Ctrl+G` / `Ctrl+Shift+G` | 分组 / 取消分组 |
-| `Ctrl+Z` / `Ctrl+Shift+Z` | 撤销 / 重做 |
-| `Ctrl+Shift+S` | 导出 SVG |
+| `V` `P` `L` `R` `O` `A` `T` `E` `M` | Switch tools |
+| `Ctrl+C/V/D` | Copy / paste / duplicate |
+| `Ctrl+G` / `Ctrl+Shift+G` | Group / ungroup |
+| `Ctrl+Z` / `Ctrl+Shift+Z` | Undo / redo |
+| `Ctrl+Shift+S` | Export SVG |
 
-完整快捷键列表见应用内菜单 → 帮助。
+You can find the full shortcut list in the in-app menu under **Help**.
 
-## 技术栈
+## Tech Stack
 
 React 19 · TypeScript · Vite 7 · rough.js · perfect-freehand · marked
 
-## 致谢
+## Credits
 
-- **[Excalidraw](https://github.com/excalidraw/excalidraw)** — 手绘白板的开山之作，核心理念来源（MIT License）
-- **[Excalicord](https://www.excalicord.com)** by [Zhang Rui](https://x.com/zarazhangrui) — 激发了这个项目 vibe coding 的欲望
-- **[Screen Studio](https://screen.studio/)** — Smart Zoom 功能源于对它的痴迷
+- **[Excalidraw](https://github.com/excalidraw/excalidraw)** - The landmark hand-drawn whiteboard project and a core inspiration. MIT License.
+- **[Excalicord](https://www.excalicord.com)** by [Zhang Rui](https://x.com/zarazhangrui) - Sparked the desire to build this through vibe coding.
+- **[Screen Studio](https://screen.studio/)** - The inspiration behind Smart Zoom.
 
-## 许可证
+## License
 
 [MIT](./LICENSE)
